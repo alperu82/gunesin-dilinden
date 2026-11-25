@@ -4,6 +4,22 @@
 
 Ücretsiz, resimli **1000 kelime kartı** projesi. Güneş Dil Teorisi (GDT, Atatürk 1935) okumaları **ezber köprüsü** olarak kullanılır.
 
+## 🌐 Web sitesi · Website
+
+**https://alperu82.github.io/gunesin-dilinden/** (tarayıcı diline göre açılır · opens in your browser's language)
+
+| | 🇹🇷 Türkçe | 🇵🇭 Filipino | 🇬🇧 English |
+|---|---|---|---|
+| Kartlar · Mga kard · Cards | [/tr/](https://alperu82.github.io/gunesin-dilinden/tr/) | [/fil/](https://alperu82.github.io/gunesin-dilinden/fil/) | [/en/](https://alperu82.github.io/gunesin-dilinden/en/) |
+| Okuma metinleri · Pagbasa · Reading | [okuma](https://alperu82.github.io/gunesin-dilinden/tr/#/okuma) | [pagbasa](https://alperu82.github.io/gunesin-dilinden/fil/#/okuma) | [reading](https://alperu82.github.io/gunesin-dilinden/en/#/okuma) |
+| Hece kartları · Mga kard ng pantig · Syllable cards | [hece](https://alperu82.github.io/gunesin-dilinden/tr/#/hece) | [pantig](https://alperu82.github.io/gunesin-dilinden/fil/#/hece) | [syllables](https://alperu82.github.io/gunesin-dilinden/en/#/hece) |
+| İndir (PDF) · I-download · Download | [indir](https://alperu82.github.io/gunesin-dilinden/tr/#/indir) | [i-download](https://alperu82.github.io/gunesin-dilinden/fil/#/indir) | [download](https://alperu82.github.io/gunesin-dilinden/en/#/indir) |
+| Hakkında · Tungkol · About | [hakkında](https://alperu82.github.io/gunesin-dilinden/tr/#/hakkinda) | [tungkol](https://alperu82.github.io/gunesin-dilinden/fil/#/hakkinda) | [about](https://alperu82.github.io/gunesin-dilinden/en/#/hakkinda) |
+
+Tek bir karta doğrudan bağlantı · Direct link to a card: `…/tr/#/k/W0026` (örnek · example: [araw · güneş](https://alperu82.github.io/gunesin-dilinden/tr/#/k/W0026))
+
+Kitaplar (PDF, taslak) · Books (PDF, draft): [indirme sayfası · download page](https://alperu82.github.io/gunesin-dilinden/tr/#/indir) · Açık veri · Open data: [`data/cards.json`](https://alperu82.github.io/gunesin-dilinden/data/cards.json)
+
 ## Baskılar
 
 | Baskı | Kim için | Kartın başı |
@@ -16,6 +32,7 @@
 ## Site
 
 - **Kartlar:** arama (Tagalog / Türkçe / İngilizce), anlam grubu (G1–G10) ve dayanak gücü (kaynak / emsal / köprü) süzgeçleri; ayrıntı penceresinde GDT okuması, kutu anlamları, ezber cümlesi, ses köprüsü, örnek ve çekim.
+- **Okuma:** her bölümün (Sayılar, G1–G10) sabit okuma metni; altı noktalı kelime kartını açar, “Metne dön” ile geri gelinir; çeviri göster/gizle; metin sürümü görünür. Kart penceresinde “geçtiği metinler” bağlantıları.
 - **Hece kartları:** 34 kartlık GDT etiket sözlüğü.
 - **İndir:** dört baskının taslak PDF'leri.
 - **Hakkında:** yöntem, dürüstlük notu, kaynak, yazar, yapay zekâ notu, lisans.
@@ -28,6 +45,7 @@ index.html  app.js  style.css      site
 build_site.py                      veriyi yeniden üretir (yalnız yazarın makinesinde)
 data/cards.json                    1000 kart, tüm baskılar + meta (yazar, lisans, kaynak)
 data/hece.json                     34 hece kartı
+data/metinler.json                 okuma metinleri (kitap/metinler/metinler.json kopyası; sürüm + tarih)
 data/pdfs.json                     PDF listesi
 data/svg_<baskı>_N.json            kart resimleri (tr, fil, en_tr, en_fil; SVG, 250'şer kartlık paketler)
 data/svg_hece.json                 hece kartı resimleri (4 baskı)

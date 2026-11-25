@@ -5,6 +5,7 @@
   // /tr/, /fil/, /en/ alt sayfaları <html data-root="../" data-ui="tr"> taşır
   const ROOT = document.documentElement.dataset.root || "";
   const URL_UI = document.documentElement.dataset.ui || "";
+  if (URL_UI) { try { localStorage.setItem("gd_ui", URL_UI); } catch (e) {} }
   const REPO_ISSUES = "https://github.com/alperu82/gunesin-dilinden/issues";
   const PAGE = 48;
 
@@ -39,6 +40,12 @@
         "köprü": "Yalnız kitabın genel tablolarına dayanan okuma; ezber köprüsüdür.",
       },
       pos: { isim: "isim", fiil: "fiil", "sıfat": "sıfat", zarf: "zarf", zamir: "zamir", edat: "edat", "sayı": "sayı", selam: "selam" },
+      nav_read: "Okuma", read_h: "Okuma metinleri", sayi: "Sayılar",
+      read_lead: "Her bölümün sonunda kısa bir metin. Altı noktalı kelimeye dokunun: kartı açılır; “Metne dön” ile geri gelirsiniz.",
+      read_ver: (v, d) => `Metin sürümü ${v}${d ? " · " + d : ""}`, cev_show: "Çeviriyi göster", cev_hide: "Çeviriyi gizle",
+      prev_text: "Önceki metin", next_text: "Sonraki metin", all_texts: "Tüm metinler", back_text: "Metne dön",
+      in_texts: "Geçtiği metinler", sent: "cümle", n_sent: (n, k) => `${n} cümle · ${k} kart`,
+      no_text: "henüz yok", no_texts: "Okuma metinleri hazırlanıyor.",
       footer_extra: "",
     },
     fil: {
@@ -69,6 +76,12 @@
         emsal: "May katulad na salitang sinuri sa aklat sa parehong paraan (may pahina).",
         "köprü": "Pagbasang batay lamang sa pangkalahatang talaan ng aklat; tulay sa pagsasaulo.",
       },
+      nav_read: "Pagbasa", read_h: "Mga babasahin", sayi: "Mga bilang",
+      read_lead: "Isang maikling teksto sa dulo ng bawat bahagi. Pindutin ang salitang may tuldok na salungguhit: bubukas ang kard nito; bumalik sa “Bumalik sa teksto”.",
+      read_ver: (v, d) => `Bersiyon ng teksto ${v}${d ? " · " + d : ""}`, cev_show: "Ipakita ang salin", cev_hide: "Itago ang salin",
+      prev_text: "Nakaraang teksto", next_text: "Susunod na teksto", all_texts: "Lahat ng teksto", back_text: "Bumalik sa teksto",
+      in_texts: "Lumalabas sa mga teksto", sent: "pangungusap", n_sent: (n, k) => `${n} pangungusap · ${k} kard`,
+      no_text: "wala pa", no_texts: "Inihahanda pa ang mga babasahin.",
       pos: { isim: "pangngalan", fiil: "pandiwa", "sıfat": "pang-uri", zarf: "pang-abay", zamir: "panghalip", edat: "pang-ukol", "sayı": "bilang", selam: "pagbati" },
     },
     en: {
@@ -99,6 +112,12 @@
         emsal: "A similar word is analysed the same way in the book (page given).",
         "köprü": "A reading based only on the book's general tables; a memory bridge.",
       },
+      nav_read: "Reading", read_h: "Reading texts", sayi: "Numbers",
+      read_lead: "A short text at the end of each section. Tap a word with a dotted underline to open its card; “Back to text” brings you back.",
+      read_ver: (v, d) => `Text version ${v}${d ? " · " + d : ""}`, cev_show: "Show translation", cev_hide: "Hide translation",
+      prev_text: "Previous text", next_text: "Next text", all_texts: "All texts", back_text: "Back to text",
+      in_texts: "Appears in texts", sent: "sentence", n_sent: (n, k) => `${n} sentences · ${k} cards`,
+      no_text: "not yet", no_texts: "The reading texts are being prepared.",
       pos: { isim: "noun", fiil: "verb", "sıfat": "adjective", zarf: "adverb", zamir: "pronoun", edat: "preposition", "sayı": "number", selam: "greeting" },
     },
   };
@@ -123,6 +142,7 @@
     ed: localStorage.getItem("gd_ed") || null,
     q: "", g: "", s: "",
     data: null, hece: null, pdfs: null, list: [], shown: 0, cur: -1,
+    metin: null, gecis: null, ctx: null, okPushed: false, okSec: null, prevHash: "",
   };
   if (!T[S.ui]) S.ui = "tr";
   if (!S.ed || !EDS[S.ed] || ({ tr: "tr", fil: "fil", en_tr: "en", en_fil: "en" }[S.ed] !== S.ui)) S.ed = { tr: "tr", fil: "fil", en: "en_fil" }[S.ui];
@@ -229,6 +249,8 @@
     ed.value = S.ed;
     const he = $("#hece-ed");
     he.innerHTML = ed.innerHTML; he.value = S.ed;
+    const oe = $("#okuma-ed");
+    oe.innerHTML = ed.innerHTML; oe.value = S.ed;
     const g = $("#f-g");
     g.innerHTML = `<option value="">${esc(t("all_g"))}</option>` +
       Object.keys(S.data.meta.groups).map((k) => `<option value="${k}">${k.replace("G", "")} · ${esc(gName(k))}</option>`).join("");
@@ -332,8 +354,39 @@
   const dlg = $("#modal");
   function openCard(listIdx, push = true) {
     if (listIdx < 0 || listIdx >= S.list.length) return;
-    S.cur = listIdx;
+    S.cur = listIdx; S.ctx = null;
     const c = S.list[listIdx];
+    cardBody(c);
+    $("#m-no").textContent = `${c.f} · ${listIdx + 1} / ${S.list.length}`;
+    $("#m-prev").disabled = listIdx === 0;
+    $("#m-next").disabled = listIdx === S.list.length - 1;
+    $("#m-back").hidden = true;
+    if (!dlg.open) dlg.showModal();
+    $("#m-body").scrollTop = 0; dlg.scrollTop = 0;
+    if (push) history.replaceState(null, "", `#/k/${c.f}`);
+  }
+  // okuma metninden açılan kart: ←/→ metindeki bağlı kartlar arasında gezer
+  function openTextCard(sec, f, push = true) {
+    const ids = textIds(sec);
+    const i = ids.indexOf(f);
+    const c = S.byF[f];
+    if (!c) return;
+    S.ctx = { sec, f, ids, i };
+    cardBody(c);
+    $("#m-no").textContent = i >= 0 ? `${c.f} · ${i + 1} / ${ids.length}` : c.f;
+    $("#m-prev").disabled = i <= 0;
+    $("#m-next").disabled = i < 0 || i === ids.length - 1;
+    const back = $("#m-back");
+    back.hidden = false; back.textContent = "← " + t("back_text");
+    if (!dlg.open) dlg.showModal();
+    $("#m-body").scrollTop = 0; dlg.scrollTop = 0;
+    if (push) history.replaceState(null, "", `#/okuma/${sec}/k/${f}`);
+  }
+  function stepCard(d) {
+    if (S.ctx) { const j = S.ctx.i + d; if (j >= 0 && j < S.ctx.ids.length) openTextCard(S.ctx.sec, S.ctx.ids[j]); }
+    else openCard(S.cur + d);
+  }
+  function cardBody(c) {
     const v = view(c, S.ed);
     const L = T[S.ui];
     const gc = gColor(v.g);
@@ -361,40 +414,197 @@
       `<section class="sec"><h3>${esc(L.s_basis)}</h3><p class="basis"><b>${pips(v.s)} ${esc(sName(v.s))}</b> — ${esc(L.strength_d[v.s] || "")}${v.d ? `<br>${esc(v.d)}` : ""}</p></section>` +
       `</div><div>` +
       `<section class="sec"><h3>${esc(L.s_bridge)}</h3>${v.br ? `<p class="bridge">${esc(v.br)}</p>` : `<p class="muted">${esc(L.no_bridge)}</p>`}</section>` +
-      ex + cj + `</div></div>`;
-    $("#m-no").textContent = `${c.f} · ${listIdx + 1} / ${S.list.length}`;
-    $("#m-prev").disabled = listIdx === 0;
-    $("#m-next").disabled = listIdx === S.list.length - 1;
+      ex + cj + `</div></div>` +
+      `<section class="sec ok-in" id="m-in" hidden aria-labelledby="m-in-h"></section>`;
+    const sel = c.f;
+    inTexts(c);
     if (v.svg) {
       cardImgUrl(c, v.svg).then((url) => {
         const ph = $("#m-body .d-card.ph");
-        if (!url || !ph || S.cur !== listIdx) return;
+        if (!url || !ph || $("#m-no").textContent.split(" ")[0] !== sel) return;
         const im = new Image();
         im.className = "d-card"; im.src = url; im.width = 342; im.height = 212;
         im.alt = `${v.head} — ${v.mean || ""}: ${v.seg || ""}`;
         ph.replaceWith(im);
       });
     }
-    if (!dlg.open) dlg.showModal();
-    $("#m-body").scrollTop = 0; dlg.scrollTop = 0;
-    if (push) history.replaceState(null, "", `#/k/${c.f}`);
+  }
+  // kart penceresinde "geçtiği metinler": #/okuma/G3#s2 bağlantıları
+  async function inTexts(c) {
+    await loadMetin();
+    const box = $("#m-in");
+    if (!box || $("#m-no").textContent.split(" ")[0] !== c.f) return;
+    const o = OKU[S.ed], list = (S.gecis[o.dizi] || {})[c.f] || [];
+    if (!list.length) { box.hidden = true; return; }
+    // bölüme göre gruplanır: "G3 · cümle 2" tek bağlantı; birden çok cümle varsa numaralar ayrı bağlantı
+    const by = [];
+    list.forEach(([sec, n]) => { const g = by.find((x) => x[0] === sec); if (g) g[1].push(n); else by.push([sec, [n]]); });
+    box.innerHTML = `<h3 id="m-in-h">${esc(t("in_texts"))}</h3><ul class="ok-chips">` +
+      by.map(([sec, ns]) => `<li style="--gc:${secColor(sec)}" title="${esc(secTitle(sec, o))}">` +
+        (ns.length === 1
+          ? `<a href="#/okuma/${sec}#s${ns[0]}">${esc(secLabel(sec))} · ${esc(t("sent"))} ${ns[0]}</a>`
+          : `<span class="ok-ck">${esc(secLabel(sec))} · ${esc(t("sent"))}</span>` +
+            ns.map((n) => `<a class="ok-cn" href="#/okuma/${sec}#s${n}" aria-label="${esc(secLabel(sec))}, ${esc(t("sent"))} ${n}">${n}</a>`).join("")) +
+        `</li>`).join("") + `</ul>`;
+    box.hidden = false;
   }
   function closeCard() {
     if (dlg.open) dlg.close();
   }
   dlg.addEventListener("close", () => {
-    if (location.hash.startsWith("#/k/")) history.replaceState(null, "", "#/kartlar");
+    const h = location.hash;
+    if (h.startsWith("#/k/")) history.replaceState(null, "", "#/kartlar");
+    const mt = h.match(/^#\/okuma\/([A-Z0-9]+)\/k\//);
+    if (mt) {
+      // metne dön: metinden gelindiyse geçmişte bir adım geri, doğrudan bağlantıysa adres metne çevrilir
+      if (S.okPushed) { S.okPushed = false; history.back(); } else history.replaceState(null, "", `#/okuma/${mt[1]}`);
+    }
+    const hs = h.match(/^#\/okuma\/[A-Z0-9]+#s(\d+)$/);
+    if (hs) {  // "geçtiği metinler" bağlantısı: odak ve görünüm işaretli cümlede kalsın
+      const li = $("#ok-s" + hs[1]);
+      if (li) { li.focus({ preventScroll: true }); li.scrollIntoView({ block: "center" }); }
+      return;
+    }
+    if (S.ctx) {
+      const w = document.querySelector(`#okuma .ok-w[data-f="${S.ctx.f}"]`) || $("#okuma h1");
+      if (w && route() === "okuma") w.focus();
+      return;
+    }
     const btn = document.querySelector(`.tile[data-i="${S.data.cards.indexOf(S.list[S.cur])}"]`);
     if (btn) btn.focus();
   });
   dlg.addEventListener("click", (e) => { if (e.target === dlg) closeCard(); });
   dlg.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowLeft") { e.preventDefault(); openCard(S.cur - 1); }
-    if (e.key === "ArrowRight") { e.preventDefault(); openCard(S.cur + 1); }
+    if (e.key === "ArrowLeft") { e.preventDefault(); stepCard(-1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); stepCard(1); }
   });
-  $("#m-prev").onclick = () => openCard(S.cur - 1);
-  $("#m-next").onclick = () => openCard(S.cur + 1);
+  $("#m-prev").onclick = () => stepCard(-1);
+  $("#m-next").onclick = () => stepCard(1);
   $("#m-close").onclick = closeCard;
+  $("#m-back").onclick = closeCard;
+
+  // ---------------- okuma metinleri (K17) ----------------
+  // dizi: hangi metin dizisi; cev: okur dilindeki çeviri satırı; lang: öğrenilen dilin lang değeri
+  const OKU = {
+    tr: { dizi: "tl", cev: "tr", lang: "tl" }, en_fil: { dizi: "tl", cev: "en", lang: "tl" },
+    fil: { dizi: "tr", cev: "fil", lang: "tr" }, en_tr: { dizi: "tr", cev: "en", lang: "tr" },
+  };
+  const SECS = ["SAYI", "G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9", "G10"];
+  const sidOf = (x) => { const m = /^W(\d+)/.exec(String(x || "")); return m ? "W" + String(+m[1]).padStart(4, "0") : null; };
+  let metinP = null;
+  function loadMetin() {
+    if (!metinP) {
+      metinP = getJSON("data/metinler.json").catch(() => ({ surum: null, tl: {}, tr: {} })).then((d) => {
+        S.metin = d; S.gecis = { tl: {}, tr: {} };
+        ["tl", "tr"].forEach((dz) => SECS.forEach((sec) => {
+          const m = (d[dz] || {})[sec];
+          if (!m) return;
+          (m.cumleler || []).forEach((c, i) => (c.t || []).forEach((tk) => {
+            const f = sidOf(tk[1]);
+            if (!f) return;
+            const L = (S.gecis[dz][f] = S.gecis[dz][f] || []);
+            if (!L.some((x) => x[0] === sec && x[1] === i + 1)) L.push([sec, i + 1]);
+          }));
+        }));
+        return d;
+      });
+    }
+    return metinP;
+  }
+  const secText = (sec, ed = S.ed) => S.metin && (S.metin[OKU[ed].dizi] || {})[sec];
+  const secList = () => SECS.filter((x) => secText(x));
+  const secLabel = (sec) => (sec === "SAYI" ? t("sayi") : sec);
+  const secColor = (sec) => (sec === "SAYI" ? "#854F0B" : gColor(sec));
+  const secName = (sec) => (sec === "SAYI" ? t("sayi") : `${sec.replace("G", "G ")} · ${gName(sec)}`);
+  function secTitle(sec, o = OKU[S.ed]) {
+    const m = secText(sec);
+    return m ? (m.baslik || {})[o.lang === "tl" ? "tl" : "tr"] || sec : sec;
+  }
+  function textIds(sec) {
+    const m = secText(sec), out = [];
+    if (!m) return out;
+    m.cumleler.forEach((c) => (c.t || []).forEach((tk) => { const f = sidOf(tk[1]); if (f && S.byF[f] && !out.includes(f)) out.push(f); }));
+    return out;
+  }
+  const NOSP_BEFORE = /^[.,!?;:…)\]}»”’%]+$/;
+  const NOSP_AFTER = /[(\[{«“‘¿¡]$/;
+  function sentenceHTML(c, o) {
+    let h = "", prev = null;
+    (c.t || []).forEach((tk) => {
+      const w = String(tk[0]);
+      if (prev !== null && !NOSP_BEFORE.test(w) && !NOSP_AFTER.test(prev)) h += " ";
+      const f = sidOf(tk[1]), card = f && S.byF[f];
+      if (card) {
+        const v = view(card, S.ed);
+        h += `<button type="button" class="ok-w" data-f="${f}" style="--gc:${gColor(v.g)}" ` +
+          `aria-label="${esc(w)}: ${esc(v.mean || v.meanFb || "")}">${esc(w)}</button>`;
+      } else h += esc(w);
+      prev = w;
+    });
+    return h;
+  }
+  const cevOn = () => { try { return localStorage.getItem("gd_cev") !== "0"; } catch (e) { return true; } };
+  function okumaHash() {
+    const m = location.hash.match(/^#\/okuma(?:\/([A-Z0-9]+))?(?:\/k\/(W\d{4}))?(?:#s(\d+))?$/);
+    return m ? { sec: m[1] || null, f: m[2] || null, s: m[3] ? +m[3] : null } : { sec: null, f: null, s: null };
+  }
+  async function renderOkuma() {
+    await loadMetin();
+    if (route() !== "okuma") return;
+    const q = okumaHash(), o = OKU[S.ed], M = S.metin, box = $("#okuma");
+    $("#okuma-ed").value = S.ed;
+    const ver = M.surum ? `<p class="ok-ver">${esc(t("read_ver")(M.surum, M.tarih))}</p>` : "";
+    if (!q.sec || !secText(q.sec)) {
+      $("#okuma-list-wrap").hidden = false;
+      box.hidden = true; S.okSec = null;
+      const has = secList();
+      $("#okuma-ver").innerHTML = ver;
+      $("#okuma-list").innerHTML = has.length ? SECS.map((sec) => {
+        const m = secText(sec);
+        if (!m) return `<li class="ok-item off" style="--gc:${secColor(sec)}"><span class="ok-k">${esc(secName(sec))}</span><span class="ok-n">${esc(t("no_text"))}</span></li>`;
+        const nk = textIds(sec).length;
+        return `<li class="ok-item" style="--gc:${secColor(sec)}"><a href="#/okuma/${sec}">` +
+          `<span class="ok-k">${esc(secName(sec))}</span>` +
+          `<span class="ok-t" lang="${o.lang}">${esc(secTitle(sec))}</span>` +
+          `<span class="ok-u" lang="${o.cev}">${esc((m.baslik || {})[o.cev] || "")}</span>` +
+          `<span class="ok-n">${esc(t("n_sent")(m.cumleler.length, nk))}</span></a></li>`;
+      }).join("") : `<li class="note">${esc(t("no_texts"))}</li>`;
+      return;
+    }
+    $("#okuma-list-wrap").hidden = true; box.hidden = false;
+    const sec = q.sec, m = secText(sec), has = secList(), k = has.indexOf(sec);
+    const yeni = S.okSec !== sec + "|" + S.ed + "|" + S.ui;
+    if (yeni) {
+      S.okSec = sec + "|" + S.ed + "|" + S.ui;
+      const on = cevOn();
+      const pn = (j, rel, lab) => has[j]
+        ? `<a class="btn ghost" id="ok-${rel}" rel="${rel}" href="#/okuma/${has[j]}">${rel === "prev" ? "← " : ""}${esc(lab)}<span class="ok-pn-t">${esc(secLabel(has[j]))}</span>${rel === "next" ? " →" : ""}</a>`
+        : `<span class="btn ghost off" id="ok-${rel}" aria-disabled="true">${rel === "prev" ? "← " : ""}${esc(lab)}${rel === "next" ? " →" : ""}</span>`;
+      box.innerHTML =
+        `<p class="ok-top"><a href="#/okuma">← ${esc(t("all_texts"))}</a></p>` +
+        `<p class="ok-kicker" style="--gc:${secColor(sec)}"><span class="dot"></span>${esc(secName(sec))}</p>` +
+        `<h1 id="ok-h" tabindex="-1" lang="${o.lang}">${esc(secTitle(sec))}</h1>` +
+        `<p class="ok-sub" lang="${o.cev}">${esc((m.baslik || {})[o.cev] || "")}</p>` +
+        `<div class="ok-tools"><button type="button" class="btn ghost" id="ok-tog" aria-controls="ok-text" aria-pressed="${on}">${esc(on ? t("cev_hide") : t("cev_show"))}</button>${ver}</div>` +
+        `<ol class="ok-text${on ? "" : " no-cev"}" id="ok-text">` +
+        m.cumleler.map((c, i) => `<li class="ok-s" id="ok-s${i + 1}" tabindex="-1"><p class="ok-l" lang="${o.lang}">${sentenceHTML(c, o)}</p>` +
+          `<p class="ok-c" lang="${o.cev}">${esc(c[o.cev] || "")}</p></li>`).join("") +
+        `</ol><nav class="ok-pn" aria-label="${esc(t("read_h"))}">${pn(k - 1, "prev", t("prev_text"))}${pn(k + 1, "next", t("next_text"))}</nav>`;
+      $("#ok-tog").onclick = (e) => {
+        const now = !cevOn();
+        try { localStorage.setItem("gd_cev", now ? "1" : "0"); } catch (x) {}
+        $("#ok-text").classList.toggle("no-cev", !now);
+        e.currentTarget.setAttribute("aria-pressed", String(now));
+        e.currentTarget.textContent = now ? t("cev_hide") : t("cev_show");
+      };
+      if (!q.s && !q.f) { window.scrollTo(0, 0); $("#ok-h").focus({ preventScroll: true }); }
+    }
+    box.querySelectorAll(".ok-s.hl").forEach((x) => x.classList.remove("hl"));
+    if (q.s) {
+      const li = $("#ok-s" + q.s);
+      if (li) { li.classList.add("hl"); li.scrollIntoView({ block: "center" }); li.focus({ preventScroll: true }); }
+    }
+  }
 
   // ---------------- hece sayfası ----------------
   async function renderHece() {
@@ -530,10 +740,11 @@
   }
 
   // ---------------- yönlendirme ----------------
-  const ROUTES = ["kartlar", "hece", "indir", "hakkinda"];
+  const ROUTES = ["kartlar", "okuma", "hece", "indir", "hakkinda"];
   function route() {
     const h = location.hash.replace(/^#\/?/, "");
     if (h.startsWith("k/")) return "kartlar";
+    if (h === "okuma" || h.startsWith("okuma/") || h.startsWith("okuma#")) return "okuma";
     return ROUTES.includes(h) ? h : "kartlar";
   }
   let lastRoute = null;
@@ -547,12 +758,25 @@
     if (r === "indir") renderDl();
     if (r === "hakkinda") renderAbout();
     const m = location.hash.match(/^#\/k\/(W\d{4})/);
-    if (m) {
+    const ok = r === "okuma" ? okumaHash() : null;
+    const prev = S.prevHash;
+    S.prevHash = location.hash;
+    if (r === "okuma") {
+      renderOkuma().then(() => {
+        if (location.hash !== S.prevHash) return;  // bu arada başka adrese geçildi
+        if (ok.sec && ok.f && S.byF[ok.f]) {
+          // metinden kelimeye tıklanarak gelindiyse "metne dön" geçmişte geri gider
+          if (!dlg.open) S.okPushed = prev.split("#s")[0] === `#/okuma/${ok.sec}` || prev === `#/okuma/${ok.sec}`;
+          openTextCard(ok.sec, ok.f, false);
+        } else if (dlg.open) { S.okPushed = false; dlg.close(); }
+      });
+    } else if (m) {
       let i = S.list.findIndex((c) => c.f === m[1]);
       if (i < 0) { S.q = S.g = S.s = ""; $("#f-q").value = ""; fillSelects(); renderGrid(); i = S.list.findIndex((c) => c.f === m[1]); }
       if (i >= 0) openCard(i, false);
-    } else if (dlg.open) dlg.close();
-    if (focus && r !== lastRoute && !m) { $("#main").focus({ preventScroll: true }); window.scrollTo(0, 0); }
+    } else if (dlg.open) { S.okPushed = false; dlg.close(); }
+    if (focus && r !== lastRoute && !m && r !== "okuma") { $("#main").focus({ preventScroll: true }); window.scrollTo(0, 0); }
+    if (focus && r !== lastRoute && r === "okuma" && !ok.sec) { $("#main").focus({ preventScroll: true }); window.scrollTo(0, 0); }
     lastRoute = r;
   }
 
@@ -571,9 +795,19 @@
       // baskının okur dili arayüz diliyle aynı olsun (TR → Türkler için, FIL → Filipinliler için, EN → İngilizce baskı)
       const okur = { tr: "tr", fil: "fil", en_tr: "en", en_fil: "en" }[S.ed];
       if (okur !== S.ui) { S.ed = { tr: "tr", fil: "fil", en: "en_fil" }[S.ui]; localStorage.setItem("gd_ed", S.ed); $("#f-ed").value = S.ed; const h = $("#hece-ed"); if (h) h.value = S.ed; }
-      applyI18n(); fillSelects(); renderGrid(); show(false);
+      applyI18n(); fillSelects(); renderGrid(); S.okSec = null; show(false);
     }));
     $("#f-ed").addEventListener("change", (e) => { S.ed = e.target.value; localStorage.setItem("gd_ed", S.ed); renderGrid(); });
+    $("#okuma-ed").addEventListener("change", (e) => {
+      S.ed = e.target.value; localStorage.setItem("gd_ed", S.ed); $("#f-ed").value = S.ed; $("#hece-ed").value = S.ed;
+      renderGrid(); renderOkuma();
+    });
+    $("#okuma").addEventListener("click", (e) => {
+      const b = e.target.closest(".ok-w");
+      if (!b) return;
+      const q = okumaHash();
+      location.hash = `#/okuma/${q.sec}/k/${b.dataset.f}`;  // geçmişe yeni adım: tarayıcı geri tuşu metne döner
+    });
     $("#hece-ed").addEventListener("change", (e) => { S.ed = e.target.value; localStorage.setItem("gd_ed", S.ed); $("#f-ed").value = S.ed; renderGrid(); renderHece(); });
     let tm;
     $("#f-q").addEventListener("input", (e) => { clearTimeout(tm); tm = setTimeout(() => { S.q = e.target.value; renderGrid(); }, 160); });
@@ -598,6 +832,7 @@
       $("#count").textContent = "Veri yüklenemedi / Hindi ma-load ang datos / Could not load data.";
       return;
     }
+    S.byF = Object.fromEntries(S.data.cards.map((c) => [c.f, c]));
     applyI18n(); fillSelects(); bind(); renderGrid(); show(false);
   }
   init();

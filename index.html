@@ -39,6 +39,7 @@ if(["tr","fil","en"].indexOf(l)<0)l="tr";location.replace(l+"/"+location.hash);}
   </div>
   <nav class="wrap nav" aria-label="main">
     <a href="#/kartlar" data-route="kartlar" data-i18n="nav_cards">Kartlar</a>
+    <a href="#/okuma" data-route="okuma" data-i18n="nav_read">Okuma</a>
     <a href="#/hece" data-route="hece" data-i18n="nav_hece">Hece kartları</a>
     <a href="#/indir" data-route="indir" data-i18n="nav_dl">İndir</a>
     <a href="#/hakkinda" data-route="hakkinda" data-i18n="nav_about">Hakkında</a>
@@ -71,6 +72,23 @@ if(["tr","fil","en"].indexOf(l)<0)l="tr";location.replace(l+"/"+location.hash);}
     <p class="count" id="count" role="status" aria-live="polite"></p>
     <ul class="grid" id="grid"></ul>
     <div class="more-wrap"><button type="button" class="btn" id="more" hidden data-i18n="more">Daha fazla göster</button></div>
+  </section>
+
+  <!-- OKUMA (K17) -->
+  <section id="page-okuma" class="page" aria-labelledby="h-read" hidden>
+    <div id="okuma-list-wrap">
+      <h1 id="h-read" data-i18n="read_h">Okuma metinleri</h1>
+      <p class="lead" data-i18n="read_lead"></p>
+      <div class="filters filters-one">
+        <div class="field">
+          <label for="okuma-ed" data-i18n="f_ed">Baskı</label>
+          <select id="okuma-ed"></select>
+        </div>
+      </div>
+      <div id="okuma-ver"></div>
+      <ol class="ok-list" id="okuma-list"></ol>
+    </div>
+    <article id="okuma" class="ok-view" hidden></article>
   </section>
 
   <!-- HECE -->
@@ -110,6 +128,7 @@ if(["tr","fil","en"].indexOf(l)<0)l="tr";location.replace(l+"/"+location.hash);}
 <dialog id="modal" aria-labelledby="m-title">
   <div class="modal-inner">
     <div class="modal-bar">
+      <button type="button" class="btn ghost m-back" id="m-back" hidden>&#8592;</button>
       <button type="button" class="icon-btn" id="m-prev" data-i18n-aria="prev">&#8592;</button>
       <span class="modal-no" id="m-no"></span>
       <button type="button" class="icon-btn" id="m-next" data-i18n-aria="next">&#8594;</button>

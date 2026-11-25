@@ -8,6 +8,7 @@ Kaynaklar (yalnız okunur):
   /home/claude/pictograph/decks/hece_kartlari.json   34 hece kartı (+ hece_sade.json)
   /home/claude/kitap/v2/en/en_0*.json                İngilizce alanlar (varsa; yoksa site yine çalışır)
   /home/claude/kitap/*_taslak_*.pdf                  taslak PDF'ler (her baskının en yenisi)
+  /home/claude/kitap/metinler/metinler.json          okuma metinleri (K17; birlestir.py çıktısı)
 
 Çıktılar (repo kökü):
   data/cards.json   bir kart = bir kayıt, tüm baskılar
@@ -16,10 +17,13 @@ Kaynaklar (yalnız okunur):
   data/svg_{tr,fil,en_tr,en_fil}_N.json  kart SVG paketleri (her biri < 3.6 MB; anahtar W0001…)
   data/svg_hece.json        34 hece kartı SVG'si (tr, fil, en_tr, en_fil)
   pdf/                      her baskının en yeni taslağı; ≤ 3.6 MB olduğu gibi, üstü gs + pypdf ile bölümlenir
+  data/metinler.json        okuma metinleri (yoksa boş iskelet; site yine çalışır)
+  tr/ fil/ en/index.html    dil sayfaları, kök index.html'den üretilir (dil_sayfalari)
 
 K13: gerçek köken / etimoloji hiçbir yerde kullanılmaz -> 'koken', 'tr_koken', 'kaynak' (sözlük) alanları atılır.
 
-Kullanım:  python3 build_site.py [--no-svg]
+Kullanım:  python3 build_site.py [--no-svg] [--metin DOSYA]
+           python3 build_site.py --yalniz-metin [--metin DOSYA]   # yalnız metinler.json + dil sayfaları (hızlı)
 Gereken: python3, pypdf; isteğe bağlı: ghostscript (gs), qpdf.
 Klasör yapısı bilerek düz: kök, data/, pdf/ (GitHub web yüklemesi: dosya ≤ 3.6 MB).
 """
@@ -43,6 +47,9 @@ HECE = PICTO / "decks" / "hece_kartlari.json"
 HECE_SADE = PICTO / "decks" / "hece_sade.json"
 EN_GLOB = str(KITAP / "v2" / "en" / "en_0*.json")
 LAYOUT = PICTO / "layout_w3.json"
+METIN = KITAP / "metinler" / "metinler.json"
+SITE_URL = "https://alperu82.github.io/gunesin-dilinden/"
+DILLER = ("tr", "fil", "en")
 
 # Kutu anlamları için küçük İngilizce sözlük (kart_sema_en.md çekirdek sözlüğü + sık geçenler).
 # Sözlükte olmayan anlam İngilizce baskıda özgün haliyle gösterilir.
@@ -350,8 +357,66 @@ def copy_pdfs():
     return items
 
 
+def _arg(ad):
+    """'--metin DOSYA' biçimli seçenek değeri (yoksa None)."""
+    a = sys.argv
+    return a[a.index(ad) + 1] if ad in a and a.index(ad) + 1 < len(a) else None
+
+
+def _kisa_id(cid):
+    m = re.match(r"W(\d+)", str(cid or ""))
+    return f"W{int(m.group(1)):04d}" if m else None
+
+
+def copy_metinler(src=None):
+    """metinler.json -> data/metinler.json (sıkıştırılmış; kart id'leri W0026 biçimine getirilir).
+    Kaynak yoksa boş iskelet yazılır, böylece site 404 almaz."""
+    src = pathlib.Path(src) if src else METIN
+    out = SITE / "data" / "metinler.json"
+    out.parent.mkdir(exist_ok=True)
+    if src.exists():
+        d = jload(src)
+        for dizi in ("tl", "tr"):
+            for m in (d.get(dizi) or {}).values():
+                for c in m.get("cumleler") or []:
+                    c["t"] = [[t[0], _kisa_id(t[1]) if t[1] else None] for t in c.get("t") or []]
+        d = {"surum": d.get("surum"), "tarih": d.get("tarih"), "tl": d.get("tl") or {}, "tr": d.get("tr") or {}}
+        print(f"metinler: {src} · sürüm {d['surum']} · tl {len(d['tl'])} · tr {len(d['tr'])} bölüm")
+    else:
+        d = {"surum": None, "tarih": None, "tl": {}, "tr": {}}
+        print(f"  ! {src} yok: data/metinler.json boş iskelet")
+    out.write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
+
+def dil_sayfasi(kok_html, dil):
+    """Kök index.html -> <dil>/index.html: yönlendirme betiği atılır, data-root/data-ui eklenir,
+    yollar ../ olur, canonical + hreflang bağlantıları eklenir."""
+    s = re.sub(r'<html lang="[^"]*">', f'<html lang="{dil}" data-root="../" data-ui="{dil}">', kok_html, count=1)
+    s = re.sub(r"<script>\(function\(\)\{try\{var l=localStorage.*?</script>\n", "", s, count=1, flags=re.S)
+    alt = "".join(f'\n<link rel="alternate" hreflang="{l}" href="{SITE_URL}{l}/">' for l in DILLER)
+    s = s.replace('<link rel="stylesheet" href="style.css">',
+                  f'<link rel="stylesheet" href="../style.css">\n<link rel="canonical" href="{SITE_URL}{dil}/">{alt}', 1)
+    s = s.replace('<script src="app.js" defer></script>', '<script src="../app.js" defer></script>', 1)
+    assert 'data-root="../"' in s and "../style.css" in s and "../app.js" in s and "location.replace" not in s, dil
+    return s
+
+
+def dil_sayfalari():
+    kok = (SITE / "index.html").read_text(encoding="utf-8")
+    for dil in DILLER:
+        p = SITE / dil / "index.html"
+        p.parent.mkdir(exist_ok=True)
+        yeni = dil_sayfasi(kok, dil)
+        degisti = not p.exists() or p.read_text(encoding="utf-8") != yeni
+        p.write_text(yeni, encoding="utf-8")
+        print(f"{dil}/index.html" + (" güncellendi" if degisti else " aynı"))
+
+
 def main():
     no_svg = "--no-svg" in sys.argv
+    metin_src = _arg("--metin")
+    if "--yalniz-metin" in sys.argv:
+        copy_metinler(metin_src); dil_sayfalari(); return
     master = jload(MASTER)
     fil = load_fil()
     ses = jload(SES) if SES.exists() else {}
@@ -443,6 +508,8 @@ def main():
     (data / "cards.json").write_text(json.dumps({"meta": meta, "cards": cards}, **dump), encoding="utf-8")
     (data / "hece.json").write_text(json.dumps(hece, **dump), encoding="utf-8")
     (data / "pdfs.json").write_text(json.dumps(pdfs, **dump), encoding="utf-8")
+    copy_metinler(metin_src)
+    dil_sayfalari()
     sz = (data / "cards.json").stat().st_size
     print(f"data/cards.json {sz/1024:.0f} KB · hece {len(hece)} · PDF {len(pdfs)}")
 
