@@ -405,6 +405,8 @@ def copy_metinler(src=None):
 def dil_sayfasi(kok_html, dil):
     """Kök index.html -> <dil>/index.html: yönlendirme betiği atılır, data-root/data-ui eklenir,
     yollar ../ olur, canonical + hreflang bağlantıları eklenir."""
+    kok_html = re.sub(r'\?v=[0-9a-f]+"', '"', kok_html)          # önbellek sürümünü sonra onbellek_kirici ekler
+    kok_html = re.sub(r' data-v="[0-9a-f]+"', '', kok_html, count=1)
     s = re.sub(r'<html lang="[^"]*">', f'<html lang="{dil}" data-root="../" data-ui="{dil}">', kok_html, count=1)
     s = re.sub(r"<script>\(function\(\)\{try\{var l=localStorage.*?</script>\n", "", s, count=1, flags=re.S)
     alt = "".join(f'\n<link rel="alternate" hreflang="{l}" href="{SITE_URL}{l}/">' for l in DILLER)
@@ -430,7 +432,7 @@ def main():
     no_svg = "--no-svg" in sys.argv
     metin_src = _arg("--metin")
     if "--yalniz-metin" in sys.argv:
-        copy_metinler(metin_src); dil_sayfalari(); return
+        copy_metinler(metin_src); dil_sayfalari(); onbellek_kirici(); return
     master = jload(MASTER)
     fil = load_fil()
     ses = jload(SES) if SES.exists() else {}
@@ -536,8 +538,27 @@ def main():
     (data / "pdfs.json").write_text(json.dumps(pdfs, **dump), encoding="utf-8")
     copy_metinler(metin_src)
     dil_sayfalari()
+    onbellek_kirici()
     sz = (data / "cards.json").stat().st_size
     print(f"data/cards.json {sz/1024:.0f} KB · hece {len(hece)} · PDF {len(pdfs)}")
+
+
+def onbellek_kirici():
+    """index ve dil sayfalarına ?v=<içerik özeti> ekler; tarayıcı eski app.js / veri dosyalarını kullanmaz."""
+    import hashlib, re as _re
+    h = hashlib.sha256()
+    for p in sorted([SITE / "app.js", SITE / "style.css", *sorted((SITE / "data").glob("*.json"))]):
+        h.update(p.read_bytes())
+    v = h.hexdigest()[:10]
+    for p in [SITE / "index.html", *(SITE / d / "index.html" for d in ("tr", "fil", "en"))]:
+        if not p.exists():
+            continue
+        t = p.read_text()
+        t = _re.sub(r'(href="(?:\.\./)?style\.css)(\?v=[0-9a-f]+)?"', rf'\1?v={v}"', t)
+        t = _re.sub(r'(src="(?:\.\./)?app\.js)(\?v=[0-9a-f]+)?"', rf'\1?v={v}"', t)
+        t = _re.sub(r'(<html[^>]*?)( data-v="[0-9a-f]+")?>', rf'\1 data-v="{v}">', t, count=1)
+        p.write_text(t)
+    print("önbellek sürümü", v)
 
 
 if __name__ == "__main__":

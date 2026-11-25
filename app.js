@@ -4,6 +4,7 @@
 
   // /tr/, /fil/, /en/ alt sayfaları <html data-root="../" data-ui="tr"> taşır
   const ROOT = document.documentElement.dataset.root || "";
+  const SURUM = document.documentElement.dataset.v || ""; // önbellek kırıcı (build_site.py yazar)
   const URL_UI = document.documentElement.dataset.ui || "";
   if (URL_UI) { try { localStorage.setItem("gd_ui", URL_UI); } catch (e) {} }
   const REPO_ISSUES = "https://github.com/alperu82/gunesin-dilinden/issues";
@@ -166,7 +167,7 @@
 
   // ---------------- veri ----------------
   async function getJSON(u) {
-    const r = await fetch(/^(https?:)?\/\//.test(u) ? u : ROOT + u);
+    const r = await fetch(/^(https?:)?\/\//.test(u) ? u : ROOT + u + (SURUM ? (u.includes("?") ? "&" : "?") + "v=" + SURUM : ""));
     if (!r.ok) throw new Error(u + " " + r.status);
     return r.json();
   }
