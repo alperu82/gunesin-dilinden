@@ -15,7 +15,9 @@ Kaynaklar (yalnız okunur):
   data/cards.json   bir kart = bir kayıt, tüm baskılar
   data/hece.json    34 hece kartı, öğrenme sırasıyla (K18: sira, b = basamak; basamak adları meta.hece_tiers)
   data/pdfs.json    indirilebilir PDF listesi
-  data/svg_{tr,fil,en_tr,en_fil}_N.json  kart SVG paketleri (her biri < 3.6 MB; anahtar W0001…)
+  data/svg_{tr,fil,en_tr,en_fil}_KK.json  kart SVG parçaları: 50 kart, üyelik kart no ile sabit
+                            (_01 = kart 1–50, _02 = 51–100 …; anahtar W0001…)
+  data/svg_manifest.json    parça + PDF özetleri (sha256); yalnız değişen dosya yazılır
   data/svg_hece.json        34 hece kartı SVG'si (tr, fil, en_tr, en_fil), öğrenme sırasıyla
   pdf/                      her baskının en yeni taslağı; ≤ 3.6 MB olduğu gibi, üstü gs + pypdf ile bölümlenir
   data/metinler.json        okuma metinleri (yoksa boş iskelet; site yine çalışır)
@@ -28,7 +30,9 @@ Kullanım:  python3 build_site.py [--no-svg] [--metin DOSYA]
 Gereken: python3, pypdf; isteğe bağlı: ghostscript (gs), qpdf.
 Klasör yapısı bilerek düz: kök, data/, pdf/ (GitHub web yüklemesi: dosya ≤ 3.6 MB).
 """
+import filecmp
 import glob
+import hashlib
 import importlib.util
 import json
 import os
@@ -207,32 +211,93 @@ def svg_min(s):
 
 
 MAX_FILE = int(3.4 * 1024 * 1024)   # GitHub web yükleme sınırı 3.6 MB; pay bırakılır
-CHUNK = 250                          # kart / paket (paket = data/svg_<baskı>_<n>.json)
+CHUNK = 50                           # kart / parça; üyelik kart numarasıyla sabit: parça k = kart (k-1)*50+1 … k*50
+MANIFEST = SITE / "data" / "svg_manifest.json"
+
+# --- değişmeyeni yazma -------------------------------------------------------
+# Her çıktı önce eski baytlarıyla karşılaştırılır; aynıysa dosyaya dokunulmaz (bayt + mtime korunur),
+# böylece GitHub'a yalnız gerçekten değişen dosyalar gider.
+SAYAC = {"yazildi": [], "ayni": [], "silindi": []}
 
 
-def write_bundles(name, svgs):
-    """svgs: [(n, dosya_id, svg)] -> data/svg_<name>_<k>.json paketleri; her biri MAX_FILE altında.
-    Döner: [{"file", "from", "to"}] (kart sıra numarası aralığı)."""
+def _rel(p):
+    p = pathlib.Path(p)
+    try:
+        return str(p.relative_to(SITE))
+    except ValueError:
+        return str(p)
+
+
+def yaz(path, veri):
+    """veri (str|bytes) dosyadakinden farklıysa yazar. Döner: True = yazıldı."""
+    path = pathlib.Path(path)
+    b = veri.encode("utf-8") if isinstance(veri, str) else veri
+    if path.exists() and path.stat().st_size == len(b) and path.read_bytes() == b:
+        SAYAC["ayni"].append(_rel(path))
+        return False
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_bytes(b)
+    os.replace(tmp, path)
+    SAYAC["yazildi"].append(_rel(path))
+    return True
+
+
+def kopyala(src, dst):
+    """src baytları dst'den farklıysa kopyalar (copy2: mtime kaynaktan). Döner: True = kopyalandı."""
+    src, dst = pathlib.Path(src), pathlib.Path(dst)
+    if dst.exists() and dst.stat().st_size == src.stat().st_size and filecmp.cmp(src, dst, shallow=False):
+        SAYAC["ayni"].append(_rel(dst))
+        return False
+    tmp = dst.with_name(dst.name + ".tmp")
+    shutil.copy2(src, tmp)
+    os.replace(tmp, dst)
+    SAYAC["yazildi"].append(_rel(dst))
+    return True
+
+
+def sil(path):
+    pathlib.Path(path).unlink()
+    SAYAC["silindi"].append(_rel(path))
+
+
+def sha(b):
+    return hashlib.sha256(b).hexdigest()
+
+
+def manifest_oku():
+    try:
+        return jload(MANIFEST)
+    except Exception:
+        return {}
+
+
+def write_bundles(name, svgs, man):
+    """svgs: [(n, dosya_id, svg)] -> data/svg_<name>_<kk>.json parçaları (50 kart; üyelik kart no ile sabit).
+    Yalnız içeriği değişen parça yazılır; artık kullanılmayan svg_<name>_*.json (eski 250'lik paketler dahil) silinir.
+    Döner: [{"k", "file", "from", "to"}] (from/to: parçanın kart numarası aralığı)."""
     data = SITE / "data"
-    for old in data.glob(f"svg_{name}_*.json"):
-        old.unlink()
-    out, k, i = [], 1, 0
-    while i < len(svgs):
-        size = CHUNK
-        while True:
-            part = svgs[i:i + size]
-            body = json.dumps({f: sv for _, f, sv in part}, ensure_ascii=False, separators=(",", ":"))
-            if len(body.encode()) <= MAX_FILE or size <= 10:
-                break
-            size = int(size * 0.8)
-        fn = f"svg_{name}_{k}.json"
-        (data / fn).write_text(body, encoding="utf-8")
-        out.append({"file": f"data/{fn}", "from": part[0][0], "to": part[-1][0]})
-        i += len(part); k += 1
-    return out
+    gruplar = {}
+    for n, f, sv in svgs:
+        gruplar.setdefault((n - 1) // CHUNK + 1, {})[f] = sv
+    out, keep, sayi = [], set(), {"yaz": 0, "atla": 0}
+    for k in sorted(gruplar):
+        body = json.dumps(gruplar[k], ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        assert len(body) <= MAX_FILE, f"svg_{name}_{k:02d}.json çok büyük ({len(body)} B)"
+        fn = f"svg_{name}_{k:02d}.json"
+        sayi["yaz" if yaz(data / fn, body) else "atla"] += 1
+        man.setdefault("files", {})[fn] = {"sha256": sha(body), "bytes": len(body), "n": len(gruplar[k])}
+        keep.add(fn)
+        out.append({"k": k, "file": f"data/{fn}", "from": (k - 1) * CHUNK + 1, "to": k * CHUNK})
+    desen = re.compile(rf"svg_{re.escape(name)}_\d+\.json")
+    for old in sorted(data.glob(f"svg_{name}_*.json")):
+        if desen.fullmatch(old.name) and old.name not in keep:
+            sil(old)
+            man.get("files", {}).pop(old.name, None)
+    return out, sayi
 
 
-def export_svgs(master, fil, hece):
+def export_svgs(master, fil, hece, man):
     mod = import_renderer()
     L = mod.load("layout_w3.json")
     EN = mod.en_yukle() if hasattr(mod, "en_yukle") else {}
@@ -248,12 +313,19 @@ def export_svgs(master, fil, hece):
                 out[yon].append((i, sid, svg_min(mod.render_w3_en(c, L, yon))))
     yonler = ("tr", "fil", "en_tr", "en_fil") if EN else ("tr", "fil")
     hc = {yon: {h["id"].split("-")[0]: svg_min(mod.render_hece(h, L, yon)) for h in hece} for yon in yonler}
-    body = json.dumps(hc, ensure_ascii=False, separators=(",", ":"))
-    assert len(body.encode()) <= MAX_FILE, "svg_hece.json çok büyük"
-    (SITE / "data" / "svg_hece.json").write_text(body, encoding="utf-8")
-    res = {k: write_bundles(k, v) for k, v in out.items() if v}
+    body = json.dumps(hc, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    assert len(body) <= MAX_FILE, "svg_hece.json çok büyük"
+    yaz(SITE / "data" / "svg_hece.json", body)
+    man["chunk"] = CHUNK
+    man.setdefault("files", {})["svg_hece.json"] = {"sha256": sha(body), "bytes": len(body), "n": len(hece)}
+    res, top = {"chunk": CHUNK}, {"yaz": 0, "atla": 0}
+    for k, v in out.items():
+        if v:
+            res[k], s = write_bundles(k, v, man)
+            top["yaz"] += s["yaz"]; top["atla"] += s["atla"]
     res["hece"] = "data/svg_hece.json"
     res["hece_yon"] = list(yonler)
+    print(f"SVG parçaları ({CHUNK} kart): {top['yaz']} yazıldı, {top['atla']} aynı (atlandı)")
     return res
 
 
@@ -316,33 +388,57 @@ def _split(pdf, stem, out):
         parts += 1
 
 
-def copy_pdfs():
-    """Her baskı önekinin (…_taslak_ öncesi) en yeni taslağı: sıkıştır, gerekirse böl, pdf/ altına yaz."""
+def copy_pdfs(man):
+    """Her baskı önekinin (…_taslak_ öncesi) en yeni taslağı: sıkıştır, gerekirse böl, pdf/ altına yaz.
+    Değişmeyen PDF'e dokunulmaz: küçük dosya baytça aynıysa kopyalanmaz; sıkıştırılıp bölünen dosya için
+    kaynağın sha256'sı man["pdf"]'te tutulur, kaynak ve parçalar aynıysa gs/qpdf hiç çalışmaz
+    (gs çıktısı her çalıştırmada farklı bayt üretir). pdf/ altında artık kullanılmayan dosyalar silinir."""
     from pypdf import PdfReader
     out = SITE / "pdf"
-    if out.exists():
-        shutil.rmtree(out)
-    out.mkdir()
+    out.mkdir(exist_ok=True)
+    onbellek = man.get("pdf", {})
+    yeni_onbellek = {}
     newest = {}
     for p in KITAP.glob("*_taslak_*.pdf"):
         key = p.name.split("_taslak_")[0]
         if key not in newest or (p.stat().st_mtime, p.name) > (newest[key].stat().st_mtime, newest[key].name):
             newest[key] = p
-    items = []
+    items, keep = [], set()
     order = {"tr": 0, "fil": 1, "en_tr": 2, "en_fil": 3}
     for key, p in sorted(newest.items()):
         stem = p.stem
-        whole = out / p.name
         if p.stat().st_size <= PDF_LIMIT:
-            shutil.copy2(p, whole)
+            whole = out / p.name
+            kopyala(p, whole)
+            files = [(whole, 1, len(PdfReader(str(whole)).pages))]
+            pages = files[0][2]
         else:
-            _gs_compress(p, whole)
-        pages = len(PdfReader(str(whole)).pages)
-        if whole.stat().st_size > PDF_LIMIT:
-            files = _split(whole, stem, out)
-            whole.unlink()
-        else:
-            files = [(whole, 1, pages)]
+            src_sha = sha(p.read_bytes())
+            o = onbellek.get(p.name) or {}
+            hazir = (o.get("src_sha256") == src_sha and o.get("files") and
+                     all((out / f["name"]).exists() and sha((out / f["name"]).read_bytes()) == f["sha256"] for f in o["files"]))
+            if hazir:
+                files = [(out / f["name"], f["from"], f["to"]) for f in o["files"]]
+                pages = o["pages"]
+                SAYAC["ayni"].extend(_rel(f) for f, _, _ in files)
+            else:
+                tmpdir = out / ".tmp"
+                if tmpdir.exists():
+                    shutil.rmtree(tmpdir)
+                tmpdir.mkdir()
+                whole = tmpdir / p.name
+                _gs_compress(p, whole)
+                pages = len(PdfReader(str(whole)).pages)
+                parcalar = _split(whole, stem, tmpdir) if whole.stat().st_size > PDF_LIMIT else [(whole, 1, pages)]
+                files = []
+                for f, a, b in parcalar:
+                    kopyala(f, out / f.name)
+                    files.append((out / f.name, a, b))
+                shutil.rmtree(tmpdir)
+            yeni_onbellek[p.name] = {"src_sha256": src_sha, "pages": pages,
+                                     "files": [{"name": f.name, "from": a, "to": b, "sha256": sha(f.read_bytes())}
+                                               for f, a, b in files]}
+        keep.update(f.name for f, _, _ in files)
         m = re.search(r"_taslak_(v[\d.]+)_(\d{8})-(\d{4})", p.name)
         if "_EN_" in p.name:
             ed = "en_fil" if "_Filipino_" in p.name else "en_tr"
@@ -356,6 +452,10 @@ def copy_pdfs():
             "parts": [{"file": f"pdf/{f.name}", "size": f.stat().st_size, "from": a, "to": b} for f, a, b in files],
         })
         print(f"PDF {p.name}: {p.stat().st_size/1e6:.1f} MB -> " + ", ".join(f"{f.name} {f.stat().st_size/1e6:.2f} MB" for f, _, _ in files))
+    for f in sorted(out.iterdir()):
+        if f.is_file() and f.name not in keep:
+            sil(f)
+    man["pdf"] = yeni_onbellek
     items.sort(key=lambda x: order.get(x["edition"], 9))
     return items
 
@@ -399,7 +499,7 @@ def copy_metinler(src=None):
     else:
         d = {"surum": None, "tarih": None, "tl": {}, "tr": {}}
         print(f"  ! {src} yok: data/metinler.json boş iskelet")
-    out.write_text(json.dumps(d, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    yaz(out, json.dumps(d, ensure_ascii=False, separators=(",", ":")))
 
 
 def dil_sayfasi(kok_html, dil):
@@ -418,13 +518,15 @@ def dil_sayfasi(kok_html, dil):
 
 
 def dil_sayfalari():
+    """Dil sayfalarını kök index.html'den üretir; önbellek sürümü yazmadan önce eklenir (dosya bir kez,
+    yalnız değiştiyse yazılır)."""
+    v = surum()
     kok = (SITE / "index.html").read_text(encoding="utf-8")
     for dil in DILLER:
         p = SITE / dil / "index.html"
         p.parent.mkdir(exist_ok=True)
-        yeni = dil_sayfasi(kok, dil)
-        degisti = not p.exists() or p.read_text(encoding="utf-8") != yeni
-        p.write_text(yeni, encoding="utf-8")
+        yeni = surumle(dil_sayfasi(kok, dil), v)
+        degisti = yaz(p, yeni)
         print(f"{dil}/index.html" + (" güncellendi" if degisti else " aynı"))
 
 
@@ -432,7 +534,7 @@ def main():
     no_svg = "--no-svg" in sys.argv
     metin_src = _arg("--metin")
     if "--yalniz-metin" in sys.argv:
-        copy_metinler(metin_src); dil_sayfalari(); onbellek_kirici(); return
+        copy_metinler(metin_src); onbellek_kirici(); dil_sayfalari(); ozet(); return
     master = jload(MASTER)
     fil = load_fil()
     ses = jload(SES) if SES.exists() else {}
@@ -496,13 +598,14 @@ def main():
             "g": sd.get("grup", ""), "sira": h["sira"], "b": h["basamak"],
         })
 
+    man = manifest_oku()
     svg_info, svg_note = {}, ""
     if no_svg:
         svg_note = "--no-svg ile atlandı"
     else:
         try:
-            svg_info = export_svgs(master, fil, hece_raw)
-            print("SVG paketleri:", ", ".join(f"{k}: {len(v)}" for k, v in svg_info.items() if isinstance(v, list) and k != "hece_yon"))
+            svg_info = export_svgs(master, fil, hece_raw, man)
+            print("SVG parça sayısı:", ", ".join(f"{k}: {len(v)}" for k, v in svg_info.items() if isinstance(v, list) and k != "hece_yon"))
         except Exception as ex:
             svg_note = f"build.py içe aktarılamadı/çalışmadı: {ex}"
             print("  ! SVG atlandı:", svg_note)
@@ -511,7 +614,7 @@ def main():
         if old.exists():
             svg_info = json.loads(old.read_text(encoding="utf-8"))["meta"].get("svg", {})
 
-    pdfs = copy_pdfs()
+    pdfs = copy_pdfs(man)
     colors = {g: v["C"] for g, v in lay["gruplar"].items()}
     ku = load_kunye()
     meta = {
@@ -533,32 +636,49 @@ def main():
     data = SITE / "data"
     data.mkdir(exist_ok=True)
     dump = dict(ensure_ascii=False, separators=(",", ":"))
-    (data / "cards.json").write_text(json.dumps({"meta": meta, "cards": cards}, **dump), encoding="utf-8")
-    (data / "hece.json").write_text(json.dumps(hece, **dump), encoding="utf-8")
-    (data / "pdfs.json").write_text(json.dumps(pdfs, **dump), encoding="utf-8")
+    yaz(data / "cards.json", json.dumps({"meta": meta, "cards": cards}, **dump))
+    yaz(data / "hece.json", json.dumps(hece, **dump))
+    yaz(data / "pdfs.json", json.dumps(pdfs, **dump))
+    yaz(MANIFEST, json.dumps(man, ensure_ascii=False, indent=1, sort_keys=True) + "\n")
     copy_metinler(metin_src)
-    dil_sayfalari()
     onbellek_kirici()
+    dil_sayfalari()
     sz = (data / "cards.json").stat().st_size
     print(f"data/cards.json {sz/1024:.0f} KB · hece {len(hece)} · PDF {len(pdfs)}")
+    ozet()
 
 
-def onbellek_kirici():
-    """index ve dil sayfalarına ?v=<içerik özeti> ekler; tarayıcı eski app.js / veri dosyalarını kullanmaz."""
-    import hashlib, re as _re
+def ozet():
+    y, a, s = SAYAC["yazildi"], SAYAC["ayni"], SAYAC["silindi"]
+    print(f"Dosyalar: {len(y)} yazıldı, {len(a)} aynı (dokunulmadı), {len(s)} silindi")
+    for ad, l in (("yazıldı", y), ("silindi", s)):
+        if l:
+            print(f"  {ad}: " + ", ".join(l[:12]) + (f" … (+{len(l) - 12})" if len(l) > 12 else ""))
+
+
+def surum():
+    """Önbellek kırıcı sürüm: app.js + style.css + data/*.json içeriğinin sha256 özeti (ilk 10 hane)."""
     h = hashlib.sha256()
     for p in sorted([SITE / "app.js", SITE / "style.css", *sorted((SITE / "data").glob("*.json"))]):
         h.update(p.read_bytes())
-    v = h.hexdigest()[:10]
-    for p in [SITE / "index.html", *(SITE / d / "index.html" for d in ("tr", "fil", "en"))]:
-        if not p.exists():
-            continue
-        t = p.read_text()
-        t = _re.sub(r'(href="(?:\.\./)?style\.css)(\?v=[0-9a-f]+)?"', rf'\1?v={v}"', t)
-        t = _re.sub(r'(src="(?:\.\./)?app\.js)(\?v=[0-9a-f]+)?"', rf'\1?v={v}"', t)
-        t = _re.sub(r'(<html[^>]*?)( data-v="[0-9a-f]+")?>', rf'\1 data-v="{v}">', t, count=1)
-        p.write_text(t)
+    return h.hexdigest()[:10]
+
+
+def surumle(t, v):
+    t = re.sub(r'(href="(?:\.\./)?style\.css)(\?v=[0-9a-f]+)?"', rf'\1?v={v}"', t)
+    t = re.sub(r'(src="(?:\.\./)?app\.js)(\?v=[0-9a-f]+)?"', rf'\1?v={v}"', t)
+    return re.sub(r'(<html[^>]*?)( data-v="[0-9a-f]+")?>', rf'\1 data-v="{v}">', t, count=1)
+
+
+def onbellek_kirici():
+    """index ve dil sayfalarına ?v=<içerik özeti> ekler; tarayıcı eski app.js / veri dosyalarını kullanmaz.
+    app.js veri isteklerine aynı sürümü (data-v -> SURUM) ?v= olarak ekler. Değişmeyen sayfa yazılmaz.
+    Dil sayfaları (tr/ fil/ en/) dil_sayfalari() ile aynı sürümle üretilir."""
+    v = surum()
+    p = SITE / "index.html"
+    yaz(p, surumle(p.read_text(encoding="utf-8"), v))
     print("önbellek sürümü", v)
+    return v
 
 
 if __name__ == "__main__":

@@ -171,10 +171,17 @@
     if (!r.ok) throw new Error(u + " " + r.status);
     return r.json();
   }
+  // Kart resimleri data/svg_<baskı>_<kk>.json parçalarında: üyelik kart numarasıyla sabit
+  // (meta.svg.chunk kart / parça; k = ceil(n / chunk), _01 = kart 1–50). Eski meta (chunk yok) için aralık araması.
+  function chunkNo(n) {
+    const size = S.data.meta.svg && S.data.meta.svg.chunk;
+    return size ? Math.ceil(n / size) : 0;
+  }
   function svgChunk(kind, n) {
     const parts = S.data.meta.svg && S.data.meta.svg[kind];
     if (!Array.isArray(parts)) return Promise.resolve(null);
-    const p = parts.find((x) => n >= x.from && n <= x.to);
+    const k = chunkNo(n);
+    const p = k ? parts.find((x) => x.k === k) : parts.find((x) => n >= x.from && n <= x.to);
     if (!p) return Promise.resolve(null);
     if (!chunkCache.has(p.file)) chunkCache.set(p.file, getJSON(p.file).catch(() => null));
     return chunkCache.get(p.file);

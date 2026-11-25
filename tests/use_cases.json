@@ -20,7 +20,7 @@
     {"id": "UC06", "ad": "Anlam grubu ve dayanak gücü süzgeçleri; sayaç güncellenir", "aktor": "öğrenen",
      "bagli": {"dosya": ["data/cards.json"], "fonk": ["filter", "fillSelects", "renderGrid"]}, "test": ["test_uc06_suzgec"]},
     {"id": "UC07", "ad": "Kart ızgarası: kart resimleri kaydırdıkça yüklenir, 'daha fazla' çalışır", "aktor": "öğrenen",
-     "bagli": {"dosya": ["data/svg_*"], "fonk": ["observer", "loadTile", "tileHTML", "svgChunk", "blobUrl", "cardImgUrl"]}, "test": ["test_uc07_izgara_resim"]},
+     "bagli": {"dosya": ["data/svg_*"], "fonk": ["observer", "loadTile", "tileHTML", "chunkNo", "svgChunk", "blobUrl", "cardImgUrl"]}, "test": ["test_uc07_izgara_resim"]},
     {"id": "UC08", "ad": "Kart penceresi: GDT okuması, kutular, ezber, ses köprüsü, örnek, çekim; ←/→ ve Esc", "aktor": "öğrenen",
      "bagli": {"dosya": ["data/cards.json", "data/svg_*"], "fonk": ["openCard", "closeCard", "view"]}, "test": ["test_uc08_kart_penceresi"]},
     {"id": "UC09", "ad": "Hece kartları sayfası (K18): 34 kart öğrenme sırasıyla 4 basamak bölümünde (10/6/7/11; başlık + not tr/fil/en; kartta basamak rozeti; ilk kart n); baskı seçici ana seçimle eş", "aktor": "öğrenen",

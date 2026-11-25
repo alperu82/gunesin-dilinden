@@ -47,7 +47,8 @@ data/cards.json                    1000 kart, tüm baskılar + meta (yazar, lisa
 data/hece.json                     34 hece kartı
 data/metinler.json                 okuma metinleri (kitap/metinler/metinler.json kopyası; sürüm + tarih)
 data/pdfs.json                     PDF listesi
-data/svg_<baskı>_N.json            kart resimleri (tr, fil, en_tr, en_fil; SVG, 250'şer kartlık paketler)
+data/svg_<baskı>_KK.json           kart resimleri (tr, fil, en_tr, en_fil; SVG, 50'şer kartlık parçalar: _01 = kart 1–50 …)
+data/svg_manifest.json             parça ve PDF özetleri (sha256); build_site.py yalnız değişen dosyayı yazar
 data/svg_hece.json                 hece kartı resimleri (4 baskı)
 pdf/*_taslak_*.pdf                 taslak PDF'ler (her baskının en yenisi)
 ```
