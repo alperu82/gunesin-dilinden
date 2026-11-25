@@ -2,6 +2,9 @@
 (() => {
   "use strict";
 
+  // /tr/, /fil/, /en/ alt sayfaları <html data-root="../" data-ui="tr"> taşır
+  const ROOT = document.documentElement.dataset.root || "";
+  const URL_UI = document.documentElement.dataset.ui || "";
   const REPO_ISSUES = "https://github.com/alperu82/gunesin-dilinden/issues";
   const PAGE = 48;
 
@@ -21,7 +24,7 @@
       h_tr: "Türkçe", h_fil: "Filipince", h_en: "İngilizce", h_book: "Kitapta", h_ex: "Örnekler", h_rule: "Okuma kuralı", h_src: "Kaynak",
       dl_h: "İndir", dl_lead: "Dört baskının taslak PDF'leri. Onaydan önce değişebilir.",
       draft: "TASLAK", pages: "sayfa", part: "Bölüm", pp: "s.", dl_data_h: "Açık veri",
-      dl_data: 'Tüm kart verisi tek dosyada: <a href="data/cards.json" download>data/cards.json</a> (CC BY-NC-SA 4.0).',
+      dl_data: 'Tüm kart verisi tek dosyada: <a href="' + ROOT + 'data/cards.json" download>data/cards.json</a> (CC BY-NC-SA 4.0).',
       no_pdf: "Henüz PDF yok.",
       ed_lead: {
         tr: "Türkçe bilenler için Tagalog: üstte Tagalog kelime, altında GDT okuması ve Türkçe anlam.",
@@ -52,7 +55,7 @@
       h_tr: "Turko", h_fil: "Filipino", h_en: "Ingles", h_book: "Sa aklat", h_ex: "Mga halimbawa", h_rule: "Tuntunin (Turko)", h_src: "Sanggunian",
       dl_h: "I-download", dl_lead: "Mga borador na PDF ng apat na edisyon. Maaari pang magbago bago aprubahan.",
       draft: "BORADOR", pages: "pahina", part: "Bahagi", pp: "p.", dl_data_h: "Bukas na datos",
-      dl_data: 'Lahat ng datos ng kard sa isang file: <a href="data/cards.json" download>data/cards.json</a> (CC BY-NC-SA 4.0).',
+      dl_data: 'Lahat ng datos ng kard sa isang file: <a href="' + ROOT + 'data/cards.json" download>data/cards.json</a> (CC BY-NC-SA 4.0).',
       no_pdf: "Wala pang PDF.",
       ed_lead: {
         tr: "Tagalog para sa mga nagsasalita ng Turko: salitang Tagalog sa itaas, pagbasa ng GDT at kahulugang Turko.",
@@ -82,7 +85,7 @@
       h_tr: "Turkish", h_fil: "Filipino", h_en: "English", h_book: "In the book", h_ex: "Examples", h_rule: "Reading rule (Turkish)", h_src: "Source",
       dl_h: "Downloads", dl_lead: "Draft PDFs of the four editions. They may change before approval.",
       draft: "DRAFT", pages: "pages", part: "Part", pp: "p.", dl_data_h: "Open data",
-      dl_data: 'All card data in one file: <a href="data/cards.json" download>data/cards.json</a> (CC BY-NC-SA 4.0).',
+      dl_data: 'All card data in one file: <a href="' + ROOT + 'data/cards.json" download>data/cards.json</a> (CC BY-NC-SA 4.0).',
       no_pdf: "No PDFs yet.",
       ed_lead: {
         tr: "Tagalog for Turkish speakers: Tagalog word on top, GDT reading and Turkish meaning below.",
@@ -116,13 +119,13 @@
   // ---------------- durum ----------------
   const $ = (s, r = document) => r.querySelector(s);
   const S = {
-    ui: localStorage.getItem("gd_ui") || guessLang(),
+    ui: URL_UI || localStorage.getItem("gd_ui") || guessLang(),
     ed: localStorage.getItem("gd_ed") || null,
     q: "", g: "", s: "",
     data: null, hece: null, pdfs: null, list: [], shown: 0, cur: -1,
   };
   if (!T[S.ui]) S.ui = "tr";
-  if (!S.ed || !EDS[S.ed]) S.ed = { tr: "tr", fil: "fil", en: "en_fil" }[S.ui];
+  if (!S.ed || !EDS[S.ed] || ({ tr: "tr", fil: "fil", en_tr: "en", en_fil: "en" }[S.ed] !== S.ui)) S.ed = { tr: "tr", fil: "fil", en: "en_fil" }[S.ui];
   const chunkCache = new Map();
   const blobCache = new Map();
 
@@ -139,7 +142,7 @@
 
   // ---------------- veri ----------------
   async function getJSON(u) {
-    const r = await fetch(u);
+    const r = await fetch(/^(https?:)?\/\//.test(u) ? u : ROOT + u);
     if (!r.ok) throw new Error(u + " " + r.status);
     return r.json();
   }
@@ -436,7 +439,7 @@
     ul.innerHTML = S.pdfs.map((p) => {
       const title = (ED_TITLE[p.edition] || ED_TITLE.tr)[S.ui];
       const parts = p.parts.map((x, i) =>
-        `<li><a class="btn ghost" href="${esc(x.file)}" download>${esc(p.parts.length > 1 ? `${L.part} ${i + 1}` : "PDF")}</a> ` +
+        `<li><a class="btn ghost" href="${esc(ROOT + x.file)}" download>${esc(p.parts.length > 1 ? `${L.part} ${i + 1}` : "PDF")}</a> ` +
         `<span class="file">${esc(L.pp)} ${x.from}–${x.to} · ${mb(x.size)}</span></li>`).join("");
       return `<li class="dl-item"><div class="info"><span class="name">${esc(title)}<span class="draft">${esc(L.draft === "DRAFT" ? "DRAFT" : L.draft + " / DRAFT")}</span></span>` +
         `<span class="file">${esc(p.version)} · ${esc(p.date)} · ${p.pages} ${esc(L.pages)}</span>` +
@@ -556,7 +559,18 @@
   // ---------------- olaylar ----------------
   function bind() {
     document.querySelectorAll("#lang-switch button").forEach((b) => b.addEventListener("click", () => {
+      if (URL_UI || b.dataset.lang !== S.ui) {
+        // dil adresi: /tr/, /fil/, /en/ (sayfa ve kart bağlantısı korunur)
+        localStorage.setItem("gd_ui", b.dataset.lang);
+        const ed = { tr: "tr", fil: "fil", en: "en_fil" }[b.dataset.lang];
+        const keep = ({ tr: "tr", fil: "fil", en_tr: "en", en_fil: "en" }[S.ed] === b.dataset.lang) ? S.ed : ed;
+        localStorage.setItem("gd_ed", keep);
+        location.href = ROOT + b.dataset.lang + "/" + location.hash; return;
+      }
       S.ui = b.dataset.lang; localStorage.setItem("gd_ui", S.ui);
+      // baskının okur dili arayüz diliyle aynı olsun (TR → Türkler için, FIL → Filipinliler için, EN → İngilizce baskı)
+      const okur = { tr: "tr", fil: "fil", en_tr: "en", en_fil: "en" }[S.ed];
+      if (okur !== S.ui) { S.ed = { tr: "tr", fil: "fil", en: "en_fil" }[S.ui]; localStorage.setItem("gd_ed", S.ed); $("#f-ed").value = S.ed; const h = $("#hece-ed"); if (h) h.value = S.ed; }
       applyI18n(); fillSelects(); renderGrid(); show(false);
     }));
     $("#f-ed").addEventListener("change", (e) => { S.ed = e.target.value; localStorage.setItem("gd_ed", S.ed); renderGrid(); });
