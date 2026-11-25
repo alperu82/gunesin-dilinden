@@ -21,7 +21,8 @@
       s_ex: "Örnek", s_cj: "Çekim", cj_h: ["geçmiş", "şimdiki", "gelecek"], root: "kök",
       no_bridge: "Bu kelime için ses köprüsü yok.", fallback: "çeviri yok, özgün etiket", familiar: "tanıdık kelime",
       hece_h: "Hece kartları",
-      hece_lead: "34 kart, GDT okumasının sözlüğüdür: her kök ve ek hecesi için kitapta verilen anlam. Kelime kartlarındaki kutular bu etiketleri kullanır.",
+      hece_lead: "34 kart, GDT okumasının sözlüğüdür: her kök ve ek hecesi için kitapta verilen anlam. Kelime kartlarındaki kutular bu etiketleri kullanır. Kartlar 4 basamakta, en dar ve kesin çerçeve önce dizilir: önce 1. basamağı öğrenin; bir kelimede önce 1., sonra 2. ve 3. basamağın hecelerini bulun; 4. basamağın anlamını bağlam seçer.",
+      h_tier: "Basamak", h_n: "kart",
       h_tr: "Türkçe", h_fil: "Filipince", h_en: "İngilizce", h_book: "Kitapta", h_ex: "Örnekler", h_rule: "Okuma kuralı", h_src: "Kaynak",
       dl_h: "İndir", dl_lead: "Dört baskının taslak PDF'leri. Onaydan önce değişebilir.",
       draft: "TASLAK", pages: "sayfa", part: "Bölüm", pp: "s.", dl_data_h: "Açık veri",
@@ -43,7 +44,7 @@
       nav_read: "Okuma", read_h: "Okuma metinleri", sayi: "Sayılar",
       read_lead: "Her bölümün sonunda kısa bir metin. Altı noktalı kelimeye dokunun: kartı açılır; “Metne dön” ile geri gelirsiniz.",
       read_ver: (v, d) => `Metin sürümü ${v}${d ? " · " + d : ""}`, cev_show: "Çeviriyi göster", cev_hide: "Çeviriyi gizle",
-      prev_text: "Önceki metin", next_text: "Sonraki metin", all_texts: "Tüm metinler", back_text: "Metne dön",
+      prev_text: "Önceki metin", next_text: "Sonraki metin", all_texts: "Tüm metinler", back_text: "Metne dön", back_card: "Geri",
       in_texts: "Geçtiği metinler", sent: "cümle", n_sent: (n, k) => `${n} cümle · ${k} kart`,
       no_text: "henüz yok", no_texts: "Okuma metinleri hazırlanıyor.",
       footer_extra: "",
@@ -58,7 +59,8 @@
       s_ex: "Halimbawa", s_cj: "Banghay", cj_h: ["nakaraan", "kasalukuyan", "hinaharap"], root: "ugat",
       no_bridge: "Walang tulay ng tunog para sa salitang ito.", fallback: "walang salin, orihinal na etiketa", familiar: "kilalang salita",
       hece_h: "Mga kard ng pantig",
-      hece_lead: "34 na kard: ang talahuluganan ng pagbasa ng GDT — ang kahulugan ng bawat ugat at panlapi ayon sa aklat. Ginagamit ito ng mga kahon sa mga kard ng salita.",
+      hece_lead: "34 na kard: ang talahuluganan ng pagbasa ng GDT — ang kahulugan ng bawat ugat at panlapi ayon sa aklat. Ginagamit ito ng mga kahon sa mga kard ng salita. Nakaayos ang mga kard sa 4 na baitang, ang pinakamakitid na balangkas muna: aralin muna ang baitang 1; sa isang salita, hanapin muna ang mga pantig ng baitang 1, saka ng 2 at 3; ang konteksto ang pipili ng kahulugan sa baitang 4.",
+      h_tier: "Baitang", h_n: "kard",
       h_tr: "Turko", h_fil: "Filipino", h_en: "Ingles", h_book: "Sa aklat", h_ex: "Mga halimbawa", h_rule: "Tuntunin (Turko)", h_src: "Sanggunian",
       dl_h: "I-download", dl_lead: "Mga borador na PDF ng apat na edisyon. Maaari pang magbago bago aprubahan.",
       draft: "BORADOR", pages: "pahina", part: "Bahagi", pp: "p.", dl_data_h: "Bukas na datos",
@@ -79,7 +81,7 @@
       nav_read: "Pagbasa", read_h: "Mga babasahin", sayi: "Mga bilang",
       read_lead: "Isang maikling teksto sa dulo ng bawat bahagi. Pindutin ang salitang may tuldok na salungguhit: bubukas ang kard nito; bumalik sa “Bumalik sa teksto”.",
       read_ver: (v, d) => `Bersiyon ng teksto ${v}${d ? " · " + d : ""}`, cev_show: "Ipakita ang salin", cev_hide: "Itago ang salin",
-      prev_text: "Nakaraang teksto", next_text: "Susunod na teksto", all_texts: "Lahat ng teksto", back_text: "Bumalik sa teksto",
+      prev_text: "Nakaraang teksto", next_text: "Susunod na teksto", all_texts: "Lahat ng teksto", back_text: "Bumalik sa teksto", back_card: "Bumalik",
       in_texts: "Lumalabas sa mga teksto", sent: "pangungusap", n_sent: (n, k) => `${n} pangungusap · ${k} kard`,
       no_text: "wala pa", no_texts: "Inihahanda pa ang mga babasahin.",
       pos: { isim: "pangngalan", fiil: "pandiwa", "sıfat": "pang-uri", zarf: "pang-abay", zamir: "panghalip", edat: "pang-ukol", "sayı": "bilang", selam: "pagbati" },
@@ -94,7 +96,8 @@
       s_ex: "Example", s_cj: "Conjugation", cj_h: ["past", "present", "future"], root: "root",
       no_bridge: "No sound bridge for this word.", fallback: "no translation, original label", familiar: "familiar word",
       hece_h: "Syllable cards",
-      hece_lead: "34 cards form the dictionary of the GDT reading: the meaning the book gives for each root and suffix syllable. The boxes on the word cards use these labels.",
+      hece_lead: "34 cards form the dictionary of the GDT reading: the meaning the book gives for each root and suffix syllable. The boxes on the word cards use these labels. The cards come in 4 tiers, narrowest frame first: learn tier 1 first; in a word, find the tier-1 syllables first, then tiers 2 and 3; in tier 4, the context chooses the meaning.",
+      h_tier: "Tier", h_n: "cards",
       h_tr: "Turkish", h_fil: "Filipino", h_en: "English", h_book: "In the book", h_ex: "Examples", h_rule: "Reading rule (Turkish)", h_src: "Source",
       dl_h: "Downloads", dl_lead: "Draft PDFs of the four editions. They may change before approval.",
       draft: "DRAFT", pages: "pages", part: "Part", pp: "p.", dl_data_h: "Open data",
@@ -115,7 +118,7 @@
       nav_read: "Reading", read_h: "Reading texts", sayi: "Numbers",
       read_lead: "A short text at the end of each section. Tap a word with a dotted underline to open its card; “Back to text” brings you back.",
       read_ver: (v, d) => `Text version ${v}${d ? " · " + d : ""}`, cev_show: "Show translation", cev_hide: "Hide translation",
-      prev_text: "Previous text", next_text: "Next text", all_texts: "All texts", back_text: "Back to text",
+      prev_text: "Previous text", next_text: "Next text", all_texts: "All texts", back_text: "Back to text", back_card: "Back",
       in_texts: "Appears in texts", sent: "sentence", n_sent: (n, k) => `${n} sentences · ${k} cards`,
       no_text: "not yet", no_texts: "The reading texts are being prepared.",
       pos: { isim: "noun", fiil: "verb", "sıfat": "adjective", zarf: "adverb", zamir: "pronoun", edat: "preposition", "sayı": "number", selam: "greeting" },
@@ -143,6 +146,7 @@
     q: "", g: "", s: "",
     data: null, hece: null, pdfs: null, list: [], shown: 0, cur: -1,
     metin: null, gecis: null, ctx: null, okPushed: false, okSec: null, prevHash: "",
+    exStack: [], exFwd: [], exNav: false, exClose: null,  // örnek cümle kelimesi -> kart: geri / ileri yığını
   };
   if (!T[S.ui]) S.ui = "tr";
   if (!S.ed || !EDS[S.ed] || ({ tr: "tr", fil: "fil", en_tr: "en", en_fil: "en" }[S.ed] !== S.ui)) S.ed = { tr: "tr", fil: "fil", en: "en_fil" }[S.ui];
@@ -208,10 +212,10 @@
       seg: src.seg, boxes, g: src.g, s: src.s, d: src.d && src.d !== "—" ? src.d : "",
       svg: EDS[ed].svg,
     };
-    if (ed === "tr") Object.assign(v, { mean: c.tr, meanLang: "tr", ez: c.ez, ezLang: "tr", br: c.br, ex: [c.ex[0], c.ex[1]], exL: ["tl", "tr"], cj: (c.cj || []).map((r) => [r[0], r[1]]), cjL: ["tl", "tr"] });
-    if (ed === "fil") Object.assign(v, { mean: c.tl, meanLang: "tl", ez: fil.ez, ezLang: "fil", br: c.brf, ex: [c.ex[1], c.ex[0]], exL: ["tr", "tl"], cj: (c.cj || []).map((r) => [r[1], r[0]]), cjL: ["tr", "tl"] });
-    if (ed === "en_tr") Object.assign(v, { mean: en.en || "", meanLang: "en", ez: en.ezber_en_tr, ezLang: "en", br: en.ses_en_tr, brTan: !!en.ses_en_tr_tanidik, ex: [c.ex[1], en.ornek_en], exL: ["tr", "en"], cj: (c.cj || []).map((r, i) => [r[1], (en.cekim_en || [])[i] || ""]), cjL: ["tr", "en"] });
-    if (ed === "en_fil") Object.assign(v, { mean: en.en || "", meanLang: "en", ez: en.ezber_en_tl, ezLang: "en", br: en.ses_en_tl, brTan: !!en.ses_en_tl_tanidik, ex: [c.ex[0], en.ornek_en], exL: ["tl", "en"], cj: (c.cj || []).map((r, i) => [r[0], (en.cekim_en || [])[i] || ""]), cjL: ["tl", "en"] });
+    if (ed === "tr") Object.assign(v, { xt: c.xl, mean: c.tr, meanLang: "tr", ez: c.ez, ezLang: "tr", br: c.br, ex: [c.ex[0], c.ex[1]], exL: ["tl", "tr"], cj: (c.cj || []).map((r) => [r[0], r[1]]), cjL: ["tl", "tr"] });
+    if (ed === "fil") Object.assign(v, { xt: c.xr, mean: c.tl, meanLang: "tl", ez: fil.ez, ezLang: "fil", br: c.brf, ex: [c.ex[1], c.ex[0]], exL: ["tr", "tl"], cj: (c.cj || []).map((r) => [r[1], r[0]]), cjL: ["tr", "tl"] });
+    if (ed === "en_tr") Object.assign(v, { xt: c.xr, mean: en.en || "", meanLang: "en", ez: en.ezber_en_tr, ezLang: "en", br: en.ses_en_tr, brTan: !!en.ses_en_tr_tanidik, ex: [c.ex[1], en.ornek_en], exL: ["tr", "en"], cj: (c.cj || []).map((r, i) => [r[1], (en.cekim_en || [])[i] || ""]), cjL: ["tr", "en"] });
+    if (ed === "en_fil") Object.assign(v, { xt: c.xl, mean: en.en || "", meanLang: "en", ez: en.ezber_en_tl, ezLang: "en", br: en.ses_en_tl, brTan: !!en.ses_en_tl_tanidik, ex: [c.ex[0], en.ornek_en], exL: ["tl", "en"], cj: (c.cj || []).map((r, i) => [r[0], (en.cekim_en || [])[i] || ""]), cjL: ["tl", "en"] });
     if (enEd && v.d) {
       v.d = v.d.replace(/(^|[^\w=])s\.(?=\s?[\d≈])/g, "$1p.").replace(/168 kök/g, "168 roots").replace(/9 anlam/g, "9 meanings")
         .replace(/kök listesi/g, "root list").replace(/ikindi/g, "ikindi (afternoon)");
@@ -398,7 +402,7 @@
         v.cj.map((r, i) => `<tr><th scope="row">${esc(L.cj_h[i] || "")}</th><td lang="${v.cjL[0]}"><b>${esc(r[0])}</b></td><td lang="${v.cjL[1]}">${esc(r[1])}</td></tr>`).join("") +
         `</tbody></table></section>` : "";
     const ex = v.ex.length
-      ? `<section class="sec ex"><h3>${esc(L.s_ex)}</h3><p class="t" lang="${v.exL[0]}">${esc(v.ex[0] || "")}</p><p class="u" lang="${v.exL[1]}">${esc(v.ex[1] || "")}</p></section>` : "";
+      ? `<section class="sec ex"><h3>${esc(L.s_ex)}</h3><p class="t" lang="${v.exL[0]}">${exHTML(v.ex[0] || "", v.xt, c.f)}</p><p class="u" lang="${v.exL[1]}">${esc(v.ex[1] || "")}</p></section>` : "";
     const img = v.svg ? `<div class="d-imgwrap"><span class="d-card ph" role="img" aria-label="${esc(v.head)}"></span></div>` : "";
     $("#m-body").innerHTML =
       img +
@@ -419,6 +423,8 @@
       ex + cj + `</div></div>` +
       `<section class="sec ok-in" id="m-in" hidden aria-labelledby="m-in-h"></section>`;
     const sel = c.f;
+    const xb = $("#m-exback");
+    xb.hidden = !S.exStack.length; xb.textContent = "← " + t("back_card");
     inTexts(c);
     if (v.svg) {
       cardImgUrl(c, v.svg).then((url) => {
@@ -430,6 +436,48 @@
         ph.replaceWith(im);
       });
     }
+  }
+  // örnek cümle (öğrenilen dil): kartı olan kelime düğme olur (okuma metnindeki .ok-w gibi); kartın kendisi düz yazı.
+  // Belirteçler cümlenin üstünde sırayla bulunur (boşluk farkına dayanıklı); uyuşmazsa cümle düz yazılır.
+  function exHTML(text, toks, self) {
+    if (!toks || !toks.length) return esc(text);
+    let i = 0, h = "";
+    for (const tk of toks) {
+      const w = Array.isArray(tk) ? tk[0] : tk, id = Array.isArray(tk) ? tk[1] : 0;
+      const p = String(w).replace(/\s+/g, "");
+      if (!p) continue;
+      let j = i;
+      while (j < text.length && /\s/.test(text[j])) j++;
+      const a = j;
+      let k = 0;
+      while (j < text.length && k < p.length) {
+        if (/\s/.test(text[j])) { j++; continue; }
+        if (text[j] !== p[k]) return esc(text);
+        j++; k++;
+      }
+      if (k < p.length) return esc(text);
+      const seg = text.slice(a, j), f = id ? "W" + String(id).padStart(4, "0") : null, card = f && f !== self && S.byF[f];
+      h += esc(text.slice(i, a));
+      if (card) {
+        const cv = view(card, S.ed);
+        h += `<button type="button" class="ok-w ex-w" data-f="${f}" style="--gc:${gColor(cv.g)}" ` +
+          `aria-label="${esc(seg)}: ${esc(cv.mean || cv.meanFb || "")}">${esc(seg)}</button>`;
+      } else h += esc(seg);
+      i = j;
+    }
+    return h + esc(text.slice(i));
+  }
+  // açık kartın adresi (ızgara: #/k/W0026 · metin: #/okuma/G3/k/W0026)
+  function modalHash() {
+    if (S.ctx) return `#/okuma/${S.ctx.sec}/k/${S.ctx.f}`;
+    const c = S.list[S.cur];
+    return c ? `#/k/${c.f}` : location.hash;
+  }
+  // örnek kelimesinden karta: geçmişe yeni adım (tarayıcı geri/ileri çalışır), yığın "← Geri" düğmesini besler
+  function exGo(f) {
+    if (!S.byF[f]) return;
+    S.exStack.push(modalHash()); S.exFwd = []; S.exNav = true;
+    location.hash = S.ctx ? `#/okuma/${S.ctx.sec}/k/${f}` : `#/k/${f}`;
   }
   // kart penceresinde "geçtiği metinler": #/okuma/G3#s2 bağlantıları
   async function inTexts(c) {
@@ -455,11 +503,22 @@
   }
   dlg.addEventListener("close", () => {
     const h = location.hash;
-    if (h.startsWith("#/k/")) history.replaceState(null, "", "#/kartlar");
+    // örnek kelimeleriyle açılan kartlar geçmişten geri alınır (n adım); vardığı adres sonra düzeltilir (show: exClose)
+    const n = S.exStack.length, ilk = S.exStack[0];
+    S.exStack = []; S.exFwd = [];
+    if (h.startsWith("#/k/")) {
+      if (n) { S.exClose = "#/kartlar"; history.go(-n); } else history.replaceState(null, "", "#/kartlar");
+      const m0 = (ilk || "").match(/^#\/k\/(W\d{4})$/);
+      if (m0) { const i0 = S.list.findIndex((c) => c.f === m0[1]); if (i0 >= 0) S.cur = i0; }
+    }
     const mt = h.match(/^#\/okuma\/([A-Z0-9]+)\/k\//);
     if (mt) {
-      // metne dön: metinden gelindiyse geçmişte bir adım geri, doğrudan bağlantıysa adres metne çevrilir
-      if (S.okPushed) { S.okPushed = false; history.back(); } else history.replaceState(null, "", `#/okuma/${mt[1]}`);
+      // metne dön: metinden gelindiyse geçmişte geri (1 + örnek adımları), doğrudan bağlantıysa adres metne çevrilir
+      const m1 = (ilk || "").match(/\/k\/(W\d{4})$/);
+      if (m1 && S.ctx) S.ctx.f = m1[1];
+      if (S.okPushed) { S.okPushed = false; history.go(-(n + 1)); }
+      else if (n) { S.exClose = `#/okuma/${mt[1]}`; history.go(-n); }
+      else history.replaceState(null, "", `#/okuma/${mt[1]}`);
     }
     const hs = h.match(/^#\/okuma\/[A-Z0-9]+#s(\d+)$/);
     if (hs) {  // "geçtiği metinler" bağlantısı: odak ve görünüm işaretli cümlede kalsın
@@ -484,6 +543,11 @@
   $("#m-next").onclick = () => stepCard(1);
   $("#m-close").onclick = closeCard;
   $("#m-back").onclick = closeCard;
+  $("#m-exback").onclick = () => { if (S.exStack.length) history.back(); };
+  $("#m-body").addEventListener("click", (e) => {
+    const b = e.target.closest(".ex-w");
+    if (b) { e.preventDefault(); exGo(b.dataset.f); }
+  });
 
   // ---------------- okuma metinleri (K17) ----------------
   // dizi: hangi metin dizisi; cev: okur dilindeki çeviri satırı; lang: öğrenilen dilin lang değeri
@@ -615,11 +679,16 @@
     $("#hece-ed").value = S.ed;
     const hy = (S.data.meta.svg && S.data.meta.svg.hece_yon) || ["tr", "fil"];
     const yon = hy.includes(S.ed) ? S.ed : (S.ui === "fil" ? "fil" : "tr");
-    $("#hece-grid").innerHTML = S.hece.map((h) => {
+    // K18: öğrenme sırası — 'sira'ya göre, basamak başına bir bölüm (başlık + not + kartlar)
+    const hs = S.hece.slice().sort((a, b) => (a.sira || 0) - (b.sira || 0));
+    const tiers = (S.data.meta.hece_tiers && S.data.meta.hece_tiers.length) ? S.data.meta.hece_tiers
+      : [{ no: 0, ad: {}, not: {} }];
+    const li = (h) => {
       const gc = h.g ? gColor(h.g) : "#6A6862";
-      return `<li class="hece" style="--gc:${gc}">` +
+      const tb = h.b ? `<span class="tier-b" title="${esc(L.h_tier + " " + h.b)}" aria-label="${esc(L.h_tier + " " + h.b)}">${h.b}</span>` : "";
+      return `<li class="hece" style="--gc:${gc}" data-f="${h.f}" data-b="${h.b || ""}">` +
         `<span class="img ph hph" data-f="${h.f}" data-alt="${esc(h.glyph + " — " + (h[S.ui] || h.tr))}"></span>` +
-        `<div class="body"><p class="glyph">${esc(h.glyph)}</p><dl>` +
+        `<div class="body"><p class="glyph">${tb}${esc(h.glyph)}</p><dl>` +
         `<dt>${esc(L.h_tr)}</dt><dd lang="tr">${esc(h.tr)}</dd>` +
         `<dt>${esc(L.h_fil)}</dt><dd lang="fil">${esc(h.fil)}</dd>` +
         (h.en ? `<dt>${esc(L.h_en)}</dt><dd lang="en">${esc(h.en)}</dd>` : "") +
@@ -628,6 +697,16 @@
         `</dl>` +
         (h.kural ? `<details><summary>${esc(L.h_rule)}</summary><p lang="tr">${esc(h.kural)}</p><p><b>${esc(L.h_src)}:</b> ${esc(h.src)}</p></details>` : "") +
         `</div></li>`;
+    };
+    $("#hece-grid").innerHTML = tiers.map((t) => {
+      const ks = t.no ? hs.filter((h) => h.b === t.no) : hs;
+      if (!ks.length) return "";
+      const ad = t.ad[S.ui] || t.ad.tr || "", nt = t.not[S.ui] || t.not.tr || "";
+      const hd = t.no ? `<header class="tier-h"><h2 id="ht-${t.no}"><span class="tier-b">${t.no}</span>` +
+        `<span>${esc(L.h_tier + " " + t.no)} · ${esc(ad)}</span> <span class="cnt">${ks.length} ${esc(L.h_n)}</span></h2>` +
+        (nt ? `<p class="tier-note">${esc(nt)}</p>` : "") + `</header>` : "";
+      return `<section class="hece-tier" data-b="${t.no}"${t.no ? ` aria-labelledby="ht-${t.no}"` : ""}>${hd}` +
+        `<ul class="hece-grid">${ks.map(li).join("")}</ul></section>`;
     }).join("");
     const svgs = await heceChunk();
     if (!svgs || !svgs[yon]) { document.querySelectorAll(".hph").forEach((p) => p.remove()); return; }
@@ -751,6 +830,13 @@
   }
   let lastRoute = null;
   function show(focus) {
+    if (S.exClose) { history.replaceState(null, "", S.exClose); S.exClose = null; }
+    // örnek kelimesi geçmişi: yeni adım (exGo) · geri (yığının tepesi) · ileri · başka gezinme (yığın sıfırlanır)
+    const now = location.hash;
+    if (S.exNav) S.exNav = false;
+    else if (S.exStack.length && S.exStack[S.exStack.length - 1] === now) { S.exFwd.push(modalHash()); S.exStack.pop(); }
+    else if (S.exFwd.length && S.exFwd[S.exFwd.length - 1] === now && dlg.open) { S.exStack.push(modalHash()); S.exFwd.pop(); }
+    else { S.exStack = []; S.exFwd = []; }
     const r = route();
     ROUTES.forEach((x) => { $("#page-" + x).hidden = x !== r; });
     document.querySelectorAll(".nav a").forEach((a) => {

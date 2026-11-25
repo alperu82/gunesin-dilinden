@@ -5,17 +5,18 @@ Kaynaklar (yalnız okunur):
   /home/claude/pictograph/decks/w1000_v3.json        ana kartlar
   /home/claude/kitap/v2/fil_denetim/fil_*.json       Türkçe kelimenin Tagalogca analizi (FIL baskısı)
   /home/claude/kitap/v2/benzer/ses_hepsi.json        ses köprüleri
-  /home/claude/pictograph/decks/hece_kartlari.json   34 hece kartı (+ hece_sade.json)
+  /home/claude/pictograph/decks/hece_kartlari.json   34 hece kartı (+ hece_sade.json, hece_basamak.json)
   /home/claude/kitap/v2/en/en_0*.json                İngilizce alanlar (varsa; yoksa site yine çalışır)
   /home/claude/kitap/*_taslak_*.pdf                  taslak PDF'ler (her baskının en yenisi)
   /home/claude/kitap/metinler/metinler.json          okuma metinleri (K17; birlestir.py çıktısı)
+  /home/claude/kitap/v2/ornek_link/ornek_{tl,tr}.json örnek cümle belirteçleri (kelime -> kart)
 
 Çıktılar (repo kökü):
   data/cards.json   bir kart = bir kayıt, tüm baskılar
-  data/hece.json    34 hece kartı
+  data/hece.json    34 hece kartı, öğrenme sırasıyla (K18: sira, b = basamak; basamak adları meta.hece_tiers)
   data/pdfs.json    indirilebilir PDF listesi
   data/svg_{tr,fil,en_tr,en_fil}_N.json  kart SVG paketleri (her biri < 3.6 MB; anahtar W0001…)
-  data/svg_hece.json        34 hece kartı SVG'si (tr, fil, en_tr, en_fil)
+  data/svg_hece.json        34 hece kartı SVG'si (tr, fil, en_tr, en_fil), öğrenme sırasıyla
   pdf/                      her baskının en yeni taslağı; ≤ 3.6 MB olduğu gibi, üstü gs + pypdf ile bölümlenir
   data/metinler.json        okuma metinleri (yoksa boş iskelet; site yine çalışır)
   tr/ fil/ en/index.html    dil sayfaları, kök index.html'den üretilir (dil_sayfalari)
@@ -45,9 +46,11 @@ FIL_DIR = KITAP / "v2" / "fil_denetim"
 SES = KITAP / "v2" / "benzer" / "ses_hepsi.json"
 HECE = PICTO / "decks" / "hece_kartlari.json"
 HECE_SADE = PICTO / "decks" / "hece_sade.json"
+HECE_BASAMAK = PICTO / "decks" / "hece_basamak.json"   # K18: 4 basamağın adı ve okura notu (tr / fil / en)
 EN_GLOB = str(KITAP / "v2" / "en" / "en_0*.json")
 LAYOUT = PICTO / "layout_w3.json"
 METIN = KITAP / "metinler" / "metinler.json"
+ORNEK_LINK = KITAP / "v2" / "ornek_link"   # ornek_tl.json (ornek[0]) · ornek_tr.json (ornek[1])
 SITE_URL = "https://alperu82.github.io/gunesin-dilinden/"
 DILLER = ("tr", "fil", "en")
 
@@ -368,6 +371,17 @@ def _kisa_id(cid):
     return f"W{int(m.group(1)):04d}" if m else None
 
 
+def ornek_tokenleri():
+    """{'tl': {id: [...]}, 'tr': {...}}; yoksa boş. Kartta sıkıştırılmış biçim: bağsız belirteç düz yazı,
+    bağlı belirteç [yazı, kart no] (W0026 -> 26)."""
+    out = {}
+    for dz in ("tl", "tr"):
+        p = ORNEK_LINK / f"ornek_{dz}.json"
+        d = jload(p) if p.exists() else {}
+        out[dz] = {k: [[t[0], int(_kisa_id(t[1])[1:])] if t[1] and _kisa_id(t[1]) else t[0] for t in v] for k, v in d.items()}
+    return out
+
+
 def copy_metinler(src=None):
     """metinler.json -> data/metinler.json (sıkıştırılmış; kart id'leri W0026 biçimine getirilir).
     Kaynak yoksa boş iskelet yazılır, böylece site 404 almaz."""
@@ -423,6 +437,7 @@ def main():
     en, en_files = load_en()
     lay = jload(LAYOUT)
     print(f"ana kart: {len(master)} · FIL: {len(fil)} · ses: {len(ses)} · EN: {len(en)} ({', '.join(en_files) or 'yok'})")
+    xt = ornek_tokenleri()
 
     cards = []
     for i, c in enumerate(master, 1):
@@ -436,6 +451,10 @@ def main():
             "ex": c.get("ornek", []), "cj": c.get("cekim", []),
             "br": s.get("ses_tr", ""), "brf": s.get("ses_fil", ""),
         }
+        # örnek cümle belirteçleri (xl: ornek[0] Tagalog, xr: ornek[1] Türkçe); modalda kelime -> kart
+        for key, dz in (("xl", "tl"), ("xr", "tr")):
+            if xt[dz].get(c["id"]):
+                r[key] = xt[dz][c["id"]]
         f = fil.get(c["id"])
         if f:
             gt = f.get("gdt_tr") or {}
@@ -455,7 +474,10 @@ def main():
         cards.append(r)
 
     hece_sade = (jload(HECE_SADE).get("kartlar", {}) if HECE_SADE.exists() else {})
-    hece_raw = jload(HECE)
+    # K18: öğrenme sırası — dosya sırasına güvenilmez, 'sira' (1–34) esas; 'basamak' 1–4
+    hece_raw = sorted(jload(HECE), key=lambda h: int(h["sira"]))
+    assert [h["sira"] for h in hece_raw] == list(range(1, len(hece_raw) + 1)), "hece_kartlari.json: sira 1..N değil"
+    hece_tiers = (jload(HECE_BASAMAK).get("basamaklar", []) if HECE_BASAMAK.exists() else [])
     hece = []
     for h in hece_raw:
         sd = hece_sade.get(h["id"], {}) or {}
@@ -469,7 +491,7 @@ def main():
             "kitapta": sd.get("kitapta") or h.get("kitaptaki_tum_anlamlar", ""),
             "kural": h.get("kural", ""), "ex_tr": sd.get("ornek_tr") or h.get("ornek_tr", ""),
             "ex_tl": sd.get("ornek_tl") or h.get("ornek_tl", ""), "src": h.get("src", ""),
-            "g": sd.get("grup", ""),
+            "g": sd.get("grup", ""), "sira": h["sira"], "b": h["basamak"],
         })
 
     svg_info, svg_note = {}, ""
@@ -503,6 +525,8 @@ def main():
         "en_count": sum(1 for c in cards if "en" in c), "en_files": en_files,
         "groups": {g: {**GROUPS[g], "c": colors.get(g, "#555")} for g in GROUPS},
         "svg": svg_info, "svg_note": svg_note,
+        "hece_tiers": [{"no": b["no"], "ad": b["ad"], "not": b["not"], "n": sum(1 for h in hece if h["b"] == b["no"])}
+                       for b in hece_tiers],
     }
     data = SITE / "data"
     data.mkdir(exist_ok=True)

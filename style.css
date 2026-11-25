@@ -265,6 +265,16 @@ table.cj th { font-size: var(--t-1); color: var(--ink-2); font-weight: 700; text
 .hece dd { margin: 0; }
 .hece details { font-size: var(--t-1); color: var(--ink-2); }
 .hece summary { cursor: pointer; font-weight: 700; color: var(--sun); min-height: 2.75rem; display: flex; align-items: center; }
+/* K18: hece öğrenme basamakları */
+.hece-tier { margin: 0 0 var(--s2); }
+.tier-h { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--sun); border-radius: var(--radius); padding: var(--s-1) var(--s0); margin: 0 0 var(--s0); }
+.tier-h h2 { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-1); font-size: var(--t1); margin: 0; }
+.tier-h h2 > span:nth-child(2) { flex: 1 1 10rem; min-width: 0; }
+.tier-h .cnt { font-size: var(--t-1); font-weight: 400; color: var(--ink-3); margin-left: auto; }
+.tier-h .tier-note { margin: var(--s-2) 0 0; font-size: var(--t-1); color: var(--ink-2); }
+.tier-b { display: inline-flex; align-items: center; justify-content: center; min-width: 1.6em; height: 1.6em; padding: 0 0.3em; border-radius: 5px;
+  background: var(--sun); color: #fff; font-family: inherit; font-size: var(--t-1); font-weight: 800; line-height: 1; }
+.hece .glyph .tier-b { margin-right: var(--s-1); vertical-align: 0.15em; }
 
 /* ---------- indir ---------- */
 .dl-list { list-style: none; margin: 0 0 var(--s1); padding: 0; display: grid; gap: var(--s0); }
@@ -362,6 +372,7 @@ code { font-family: ui-monospace, Menlo, Consolas, monospace; background: var(--
   border-radius: 3px; min-height: 1.75rem;
 }
 .ok-w:hover { background: rgb(232 163 23 / 16%); text-decoration-style: solid; }
+.ex .ex-w { font-weight: inherit; min-height: 0; }
 .ok-pn { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s-1); margin-top: var(--s1); }
 .ok-pn .btn { display: inline-flex; align-items: center; gap: 0.382em; text-decoration: none; }
 .ok-pn .btn.off { opacity: .4; cursor: default; border-color: var(--line); color: var(--ink-3); }

@@ -23,8 +23,8 @@
      "bagli": {"dosya": ["data/svg_*"], "fonk": ["observer", "loadTile", "tileHTML", "svgChunk", "blobUrl", "cardImgUrl"]}, "test": ["test_uc07_izgara_resim"]},
     {"id": "UC08", "ad": "Kart penceresi: GDT okuması, kutular, ezber, ses köprüsü, örnek, çekim; ←/→ ve Esc", "aktor": "öğrenen",
      "bagli": {"dosya": ["data/cards.json", "data/svg_*"], "fonk": ["openCard", "closeCard", "view"]}, "test": ["test_uc08_kart_penceresi"]},
-    {"id": "UC09", "ad": "Hece kartları sayfası: 34 kart, baskı seçici ana seçimle eş", "aktor": "öğrenen",
-     "bagli": {"dosya": ["data/hece.json", "data/svg_hece.json"], "fonk": ["renderHece", "heceChunk"]}, "test": ["test_uc09_hece"]},
+    {"id": "UC09", "ad": "Hece kartları sayfası (K18): 34 kart öğrenme sırasıyla 4 basamak bölümünde (10/6/7/11; başlık + not tr/fil/en; kartta basamak rozeti; ilk kart n); baskı seçici ana seçimle eş", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/hece.json", "data/svg_hece.json", "data/cards.json"], "fonk": ["renderHece", "heceChunk"]}, "test": ["test_uc09_hece", "test_uc09_hece_basamak_dili"]},
     {"id": "UC10", "ad": "İndir sayfası: 4 taslak PDF ve açık veri bağlantıları çalışır (HTTP 200)", "aktor": "öğrenen / öğretmen",
      "bagli": {"dosya": ["data/pdfs.json", "pdf/*"], "fonk": ["renderDl"]}, "test": ["test_uc10_indir"]},
     {"id": "UC11", "ad": "Hakkında: yöntem, dürüstlük notu, kaynak, yazar, yapay zekâ notu, lisans", "aktor": "okur / yayınevi",
@@ -38,6 +38,8 @@
     {"id": "UC15", "ad": "Okuma metni: kelime → kart → metne dön, önceki/sonraki metin, sürüm görünür", "aktor": "öğrenen",
      "bagli": {"dosya": ["data/metinler.json", "tr/index.html", "fil/index.html", "en/index.html"], "fonk": ["renderOkuma", "sentenceHTML", "okumaHash", "loadMetin", "secTitle", "textIds", "openTextCard", "stepCard", "cardBody", "show", "route", "bind", "fillSelects"]}, "test": ["test_uc15_okuma_metni"]},
     {"id": "UC16", "ad": "Kart penceresinde metin geçişleri: 'geçtiği metinler' bağlantısı cümleyi işaretler; ızgara ve metin penceresinde", "aktor": "öğrenen",
-     "bagli": {"dosya": ["data/metinler.json"], "fonk": ["inTexts", "loadMetin", "openCard", "openTextCard", "cardBody", "renderOkuma", "show"]}, "test": ["test_uc16_kart_metin_gecisleri"]}
+     "bagli": {"dosya": ["data/metinler.json"], "fonk": ["inTexts", "loadMetin", "openCard", "openTextCard", "cardBody", "renderOkuma", "show"]}, "test": ["test_uc16_kart_metin_gecisleri"]},
+    {"id": "UC17", "ad": "Kart örnek cümlesindeki kelimeden karta geçiş ve geri dönüş", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/cards.json", "index.html"], "fonk": ["exHTML", "exGo", "modalHash", "view", "cardBody", "openCard", "openTextCard", "closeCard", "show", "route", "okumaHash"]}, "test": ["test_uc17_ornek_kelime_kart"]}
   ]
 }

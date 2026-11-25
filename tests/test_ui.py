@@ -3,7 +3,7 @@ Tümü:      pytest tests/test_ui.py
 Etkilenen: python3 tests/etki.py   (değişen dosyalara göre yalnız gerekli testler)
 Görsel taban çizgisini yenile: GORSEL_TABAN=yenile pytest tests/test_ui.py -k uc14
 """
-import os, re, socket, subprocess, sys, time, pathlib
+import os, re, json, socket, subprocess, sys, time, pathlib
 import pytest
 from playwright.sync_api import sync_playwright, expect
 
@@ -144,8 +144,30 @@ def test_uc08_kart_penceresi(sayfa, site):
 def test_uc09_hece(sayfa, site, baski):
     sayfa.goto(site + "/tr/#/hece"); bekle(sayfa)
     sayfa.select_option("#hece-ed", baski); bekle(sayfa, 1500)
-    assert sayfa.locator("#hece-grid > *").count() == 34
+    # K18: 4 basamak bölümü (10 / 6 / 7 / 11 kart), sıra 'sira'ya göre; ilk kart n (H25)
+    bolum = sayfa.locator("#hece-grid > section.hece-tier")
+    assert bolum.count() == 4
+    assert [bolum.nth(i).locator(".hece-grid > li.hece").count() for i in range(4)] == [10, 6, 7, 11]
+    assert sayfa.locator("#hece-grid li.hece").count() == 34
+    assert [bolum.nth(i).get_attribute("data-b") for i in range(4)] == ["1", "2", "3", "4"]
+    for i in range(4):  # başlık + not; her kartın rozeti kendi basamağı
+        assert bolum.nth(i).locator("h2").inner_text().strip().startswith(f"{i + 1}")
+        assert bolum.nth(i).locator(".tier-h .tier-note").inner_text().strip()
+        rozet = bolum.nth(i).locator("li.hece .glyph .tier-b").all_inner_texts()
+        assert rozet == [str(i + 1)] * len(rozet) and len(rozet) == [10, 6, 7, 11][i]
+    ilk = sayfa.locator("#hece-grid li.hece").first
+    assert ilk.get_attribute("data-f") == "H25"
+    assert ilk.evaluate("e => e.querySelector('.glyph').lastChild.textContent.trim().split(/\\s+/)[0]") == "n"
+    sira = sayfa.eval_on_selector_all("#hece-grid li.hece", "es => es.map(e => e.dataset.f)")
+    beklenen = [h["f"] for h in sorted(json.loads((KOK / "data" / "hece.json").read_text()), key=lambda h: h["sira"])]
+    assert sira == beklenen
     assert ed(sayfa) == baski
+
+
+@pytest.mark.parametrize("dil,kelime", [("tr", "Basamak 1"), ("fil", "Baitang 1"), ("en", "Tier 1")])
+def test_uc09_hece_basamak_dili(sayfa, site, dil, kelime):
+    sayfa.goto(f"{site}/{dil}/#/hece"); bekle(sayfa, 1500)
+    assert kelime in sayfa.locator("#ht-1").inner_text()
 
 
 # ---------------- UC10 ----------------
@@ -292,3 +314,64 @@ def test_uc16_kart_metin_gecisleri(sayfa, site):
     sayfa.goto(site + "/fil/#/k/W0026"); bekle(sayfa, 2000)
     expect(sayfa.locator("#m-in")).to_be_visible()
     assert "pangungusap" in sayfa.inner_text("#m-in")
+
+
+# ---------------- UC17 ----------------
+def test_uc17_ornek_kelime_kart(sayfa, site):
+    """Kart örnek cümlesindeki kelimeden karta geçiş ve geri dönüş (ızgara ve okuma metni penceresinde)."""
+    ex = "#m-body .sec.ex .t"
+    # ızgara penceresi: araw (W0026) 'Mainit ang araw.' — kendi kelimesi bağlı değil
+    sayfa.goto(site + "/tr/#/k/W0026"); bekle(sayfa, 2000)
+    expect(sayfa.locator("#modal")).to_be_visible()
+    expect(sayfa.locator("#m-exback")).to_be_hidden()
+    assert sayfa.get_attribute(ex, "lang") == "tl"
+    assert sayfa.inner_text(ex).strip() == "Mainit ang araw.", "cümle metni değişmemeli"
+    assert sayfa.locator(f"{ex} .ex-w[data-f=W0026]").count() == 0, "kart kendine bağlanmaz"
+    w = sayfa.locator(f"{ex} .ex-w").first
+    expect(w).to_have_class(re.compile(r"\bok-w\b"))  # okuma metni kelimeleriyle aynı görünüm
+    f1 = w.get_attribute("data-f"); w.click(); bekle(sayfa, 900)
+    assert sayfa.url.endswith(f"#/k/{f1}") and sayfa.inner_text("#m-no").startswith(f1)
+    expect(sayfa.locator("#m-exback")).to_be_visible()
+    # ikinci adım: yeni kartın örneğinden bir kelime daha (varsa)
+    w2 = sayfa.locator(f"{ex} .ex-w")
+    f2 = None
+    if w2.count():
+        f2 = w2.first.get_attribute("data-f"); w2.first.click(); bekle(sayfa, 900)
+        assert sayfa.url.endswith(f"#/k/{f2}")
+        sayfa.click("#m-exback"); bekle(sayfa, 800)
+        assert sayfa.url.endswith(f"#/k/{f1}") and sayfa.inner_text("#m-no").startswith(f1)
+        expect(sayfa.locator("#m-exback")).to_be_visible()
+    sayfa.click("#m-exback"); bekle(sayfa, 800)
+    assert sayfa.url.endswith("#/k/W0026") and sayfa.inner_text("#m-no").startswith("W0026")
+    expect(sayfa.locator("#m-exback")).to_be_hidden()
+    # tarayıcı ileri / geri (adres geçmişi: #/k/W0026 -> #/k/f1)
+    sayfa.go_forward(); bekle(sayfa, 800)
+    assert sayfa.url.endswith(f"#/k/{f1}"); expect(sayfa.locator("#m-exback")).to_be_visible()
+    sayfa.go_back(); bekle(sayfa, 800)
+    assert sayfa.url.endswith("#/k/W0026"); expect(sayfa.locator("#modal")).to_be_visible()
+    expect(sayfa.locator("#m-exback")).to_be_hidden()
+    # kapatınca ızgara (#/kartlar); örnek adımları geçmişten alınır
+    sayfa.locator(f"{ex} .ex-w").first.click(); bekle(sayfa, 800)
+    sayfa.keyboard.press("Escape"); bekle(sayfa, 800)
+    expect(sayfa.locator("#modal")).to_be_hidden()
+    assert sayfa.url.endswith("#/kartlar")
+    # okuma metninden açılan pencere: #/okuma/G1/k/W0026 -> örnek kelime -> #/okuma/G1/k/f1 -> geri -> metne dön
+    sayfa.goto(site + "/tr/#/okuma/G1"); bekle(sayfa, 1500)
+    sayfa.locator("#okuma .ok-w[data-f=W0026]").first.click(); bekle(sayfa, 900)
+    assert sayfa.url.endswith("#/okuma/G1/k/W0026")
+    sayfa.locator(f"{ex} .ex-w").first.click(); bekle(sayfa, 900)
+    assert sayfa.url.endswith(f"#/okuma/G1/k/{f1}") and sayfa.inner_text("#m-no").startswith(f1)
+    expect(sayfa.locator("#m-exback")).to_be_visible(); expect(sayfa.locator("#m-back")).to_be_visible()
+    sayfa.go_back(); bekle(sayfa, 800)
+    assert sayfa.url.endswith("#/okuma/G1/k/W0026"); expect(sayfa.locator("#m-exback")).to_be_hidden()
+    sayfa.go_forward(); bekle(sayfa, 800)
+    assert sayfa.url.endswith(f"#/okuma/G1/k/{f1}"); expect(sayfa.locator("#m-exback")).to_be_visible()
+    sayfa.click("#m-back"); bekle(sayfa, 900)   # metne dön: örnek adımları dahil geri
+    expect(sayfa.locator("#modal")).to_be_hidden()
+    assert sayfa.url.endswith("#/okuma/G1") and sayfa.is_visible("#okuma h1")
+    assert sayfa.evaluate("document.activeElement.classList.contains('ok-w') && document.activeElement.dataset.f === 'W0026'"), \
+        "odak metindeki kelimeye dönmeli"
+    # FIL baskısı: öğrenilen dil Türkçe (ornek[1])
+    sayfa.goto(site + "/fil/#/k/W0026"); bekle(sayfa, 2000)
+    assert sayfa.get_attribute(ex, "lang") == "tr"
+    assert sayfa.locator(f"{ex} .ex-w[data-f=W0038]").count() == 1   # sıcak -> mainit
