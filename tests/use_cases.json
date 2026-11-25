@@ -1,0 +1,43 @@
+{
+  "_aciklama": "Sitenin kullanım senaryoları (UC). Her UC'nin hangi dosyalara / app.js fonksiyonlarına bağlı olduğu 'bagli' alanında. etki.py bu eşlemeyle değişen dosyadan etkilenen UC'leri ve çalışacak testleri bulur.",
+  "boyutlar": {
+    "arayuz_dili": ["tr", "fil", "en"],
+    "baski": ["tr", "fil", "en_tr", "en_fil"],
+    "ekran": ["mobil-390", "masaustu-1280"],
+    "sayfa": ["kartlar", "okuma", "okuma-metni", "hece", "indir", "hakkinda", "kart-penceresi"]
+  },
+  "uc": [
+    {"id": "UC01", "ad": "Siteye ilk giriş: kök adres tarayıcı diline göre /tr/ /fil/ /en/ adresine yönlenir", "aktor": "ziyaretçi",
+     "bagli": {"dosya": ["index.html"], "fonk": ["guessLang", "init"]}, "test": ["test_uc01_kok_yonlendirme"]},
+    {"id": "UC02", "ad": "Arayüz dilini değiştirme: adres /dil/ olur, açık sayfa (#/...) korunur, baskı okur diline uyar", "aktor": "ziyaretçi",
+     "bagli": {"dosya": ["tr/index.html", "fil/index.html", "en/index.html"], "fonk": ["bind", "applyI18n", "fillSelects"]}, "test": ["test_uc02_dil_degistir"]},
+    {"id": "UC03", "ad": "Dil adresiyle doğrudan giriş (/en/#/k/W0026): doğru dil ve kart açılır", "aktor": "paylaşılan bağlantıyı açan",
+     "bagli": {"dosya": ["tr/index.html", "fil/index.html", "en/index.html"], "fonk": ["init", "route", "openCard"]}, "test": ["test_uc03_dogrudan_baglanti"]},
+    {"id": "UC04", "ad": "Baskı seçme (TR/FIL/EN-TR/EN-FIL): kartlar ve açıklama metni değişir", "aktor": "öğrenen",
+     "bagli": {"dosya": [], "fonk": ["renderGrid", "fillSelects", "view", "cardImgUrl"]}, "test": ["test_uc04_baski_sec"]},
+    {"id": "UC05", "ad": "Kelime arama (Tagalog / Türkçe / İngilizce; aksan ve ı/i duyarsız)", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/cards.json"], "fonk": ["filter", "score"]}, "test": ["test_uc05_arama"]},
+    {"id": "UC06", "ad": "Anlam grubu ve dayanak gücü süzgeçleri; sayaç güncellenir", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/cards.json"], "fonk": ["filter", "fillSelects", "renderGrid"]}, "test": ["test_uc06_suzgec"]},
+    {"id": "UC07", "ad": "Kart ızgarası: kart resimleri kaydırdıkça yüklenir, 'daha fazla' çalışır", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/svg_*"], "fonk": ["observer", "loadTile", "tileHTML", "svgChunk", "blobUrl", "cardImgUrl"]}, "test": ["test_uc07_izgara_resim"]},
+    {"id": "UC08", "ad": "Kart penceresi: GDT okuması, kutular, ezber, ses köprüsü, örnek, çekim; ←/→ ve Esc", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/cards.json", "data/svg_*"], "fonk": ["openCard", "closeCard", "view"]}, "test": ["test_uc08_kart_penceresi"]},
+    {"id": "UC09", "ad": "Hece kartları sayfası: 34 kart, baskı seçici ana seçimle eş", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/hece.json", "data/svg_hece.json"], "fonk": ["renderHece", "heceChunk"]}, "test": ["test_uc09_hece"]},
+    {"id": "UC10", "ad": "İndir sayfası: 4 taslak PDF ve açık veri bağlantıları çalışır (HTTP 200)", "aktor": "öğrenen / öğretmen",
+     "bagli": {"dosya": ["data/pdfs.json", "pdf/*"], "fonk": ["renderDl"]}, "test": ["test_uc10_indir"]},
+    {"id": "UC11", "ad": "Hakkında: yöntem, dürüstlük notu, kaynak, yazar, yapay zekâ notu, lisans", "aktor": "okur / yayınevi",
+     "bagli": {"dosya": [], "fonk": ["renderAbout"]}, "test": ["test_uc11_hakkinda"]},
+    {"id": "UC12", "ad": "Tercihler hatırlanır (dil, baskı) ve yeniden yüklemede korunur", "aktor": "dönen ziyaretçi",
+     "bagli": {"dosya": [], "fonk": ["init", "bind"]}, "test": ["test_uc12_tercih_kalici"]},
+    {"id": "UC13", "ad": "Erişilebilirlik: klavyeyle gezinme, odak, alt metin, kontrast", "aktor": "ekran okuyucu / klavye kullanıcısı",
+     "bagli": {"dosya": ["index.html", "style.css"], "fonk": ["show", "openCard", "closeCard"]}, "test": ["test_uc13_erisilebilirlik"]},
+    {"id": "UC14", "ad": "Ekran görünümü: mobil 390 ve masaüstü 1280'de taşma yok, görsel fark eşiği aşılmaz", "aktor": "herkes",
+     "bagli": {"dosya": ["index.html", "style.css", "tr/index.html", "fil/index.html", "en/index.html"], "fonk": ["tileHTML", "view", "applyI18n", "renderOkuma", "sentenceHTML"]}, "test": ["test_uc14_gorunum"]},
+    {"id": "UC15", "ad": "Okuma metni: kelime → kart → metne dön, önceki/sonraki metin, sürüm görünür", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/metinler.json", "tr/index.html", "fil/index.html", "en/index.html"], "fonk": ["renderOkuma", "sentenceHTML", "okumaHash", "loadMetin", "secTitle", "textIds", "openTextCard", "stepCard", "cardBody", "show", "route", "bind", "fillSelects"]}, "test": ["test_uc15_okuma_metni"]},
+    {"id": "UC16", "ad": "Kart penceresinde metin geçişleri: 'geçtiği metinler' bağlantısı cümleyi işaretler; ızgara ve metin penceresinde", "aktor": "öğrenen",
+     "bagli": {"dosya": ["data/metinler.json"], "fonk": ["inTexts", "loadMetin", "openCard", "openTextCard", "cardBody", "renderOkuma", "show"]}, "test": ["test_uc16_kart_metin_gecisleri"]}
+  ]
+}
