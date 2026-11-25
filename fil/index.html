@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="fil" data-root="../" data-ui="fil">
+<head>
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Güneşin Dilinden · Mula sa Wika ng Araw · From the Language of the Sun (beta)</title>
+<meta name="description" content="Ücretsiz 1000 kelimelik resimli kart projesi: Türkçe ↔ Filipince (Tagalog) ↔ English. Güneş Dil Teorisi okumaları ezber köprüsü olarak kullanılır.">
+<meta name="theme-color" content="#B5480E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='14' fill='%23E8A317'/%3E%3Cg stroke='%23B5480E' stroke-width='5' stroke-linecap='round'%3E%3Cpath d='M32 4v8M32 52v8M4 32h8M52 32h8M12 12l6 6M46 46l6 6M12 52l6-6M46 18l6-6'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="../style.css">
+<link rel="canonical" href="https://alperu82.github.io/gunesin-dilinden/fil/">
+<link rel="alternate" hreflang="tr" href="https://alperu82.github.io/gunesin-dilinden/tr/">
+<link rel="alternate" hreflang="fil" href="https://alperu82.github.io/gunesin-dilinden/fil/">
+<link rel="alternate" hreflang="en" href="https://alperu82.github.io/gunesin-dilinden/en/">
+</head>
+<body>
+<a class="skip" href="#main" data-i18n="skip">İçeriğe geç</a>
+<div class="ribbon" aria-hidden="true"><span>BETA</span></div>
+
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="#/kartlar" aria-label="Güneşin Dilinden">
+      <svg class="sun" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+        <circle cx="32" cy="32" r="13" fill="#E8A317"/>
+        <g stroke="#B5480E" stroke-width="4.5" stroke-linecap="round">
+          <path d="M32 5v8M32 51v8M5 32h8M51 32h8M13 13l5.5 5.5M45.5 45.5 51 51M13 51l5.5-5.5M45.5 18.5 51 13"/>
+        </g>
+      </svg>
+      <span class="brand-text">
+        <span class="brand-title" id="brand-title">Güneşin Dilinden</span>
+        <span class="brand-sub" id="brand-sub">Mula sa Wika ng Araw · From the Language of the Sun</span>
+      </span>
+    </a>
+    <div class="lang" role="group" aria-label="Dil / Wika / Language" id="lang-switch">
+      <button type="button" data-lang="tr" lang="tr">TR</button>
+      <button type="button" data-lang="fil" lang="fil">FIL</button>
+      <button type="button" data-lang="en" lang="en">EN</button>
+    </div>
+  </div>
+  <nav class="wrap nav" aria-label="main">
+    <a href="#/kartlar" data-route="kartlar" data-i18n="nav_cards">Kartlar</a>
+    <a href="#/hece" data-route="hece" data-i18n="nav_hece">Hece kartları</a>
+    <a href="#/indir" data-route="indir" data-i18n="nav_dl">İndir</a>
+    <a href="#/hakkinda" data-route="hakkinda" data-i18n="nav_about">Hakkında</a>
+  </nav>
+</header>
+
+<main id="main" class="wrap" tabindex="-1">
+  <!-- KARTLAR -->
+  <section id="page-kartlar" class="page" aria-labelledby="h-cards">
+    <h1 id="h-cards" data-i18n="cards_h">1000 kelime kartı</h1>
+    <p class="lead" id="edition-lead"></p>
+    <form class="filters" id="filters" role="search" onsubmit="return false">
+      <div class="field field-ed">
+        <label for="f-ed" data-i18n="f_ed">Baskı</label>
+        <select id="f-ed"></select>
+      </div>
+      <div class="field field-q">
+        <label for="f-q" data-i18n="f_q">Ara</label>
+        <input id="f-q" type="search" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="f-g" data-i18n="f_g">Anlam grubu</label>
+        <select id="f-g"></select>
+      </div>
+      <div class="field">
+        <label for="f-s" data-i18n="f_s">Dayanak gücü</label>
+        <select id="f-s"></select>
+      </div>
+    </form>
+    <p class="count" id="count" role="status" aria-live="polite"></p>
+    <ul class="grid" id="grid"></ul>
+    <div class="more-wrap"><button type="button" class="btn" id="more" hidden data-i18n="more">Daha fazla göster</button></div>
+  </section>
+
+  <!-- HECE -->
+  <section id="page-hece" class="page" aria-labelledby="h-hece" hidden>
+    <h1 id="h-hece" data-i18n="hece_h">Hece kartları</h1>
+    <p class="lead" data-i18n="hece_lead"></p>
+    <div class="filters filters-one">
+      <div class="field">
+        <label for="hece-ed" data-i18n="f_ed">Baskı</label>
+        <select id="hece-ed"></select>
+      </div>
+    </div>
+    <ul class="hece-grid" id="hece-grid"></ul>
+  </section>
+
+  <!-- İNDİR -->
+  <section id="page-indir" class="page" aria-labelledby="h-dl" hidden>
+    <h1 id="h-dl" data-i18n="dl_h">İndir</h1>
+    <p class="lead" data-i18n="dl_lead"></p>
+    <ul class="dl-list" id="dl-list"></ul>
+    <h2 data-i18n="dl_data_h">Açık veri</h2>
+    <p data-i18n-html="dl_data"></p>
+  </section>
+
+  <!-- HAKKINDA -->
+  <section id="page-hakkinda" class="page prose" aria-labelledby="h-about" hidden>
+    <div id="about"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p data-i18n-html="footer"></p>
+  </div>
+</footer>
+
+<dialog id="modal" aria-labelledby="m-title">
+  <div class="modal-inner">
+    <div class="modal-bar">
+      <button type="button" class="icon-btn" id="m-prev" data-i18n-aria="prev">&#8592;</button>
+      <span class="modal-no" id="m-no"></span>
+      <button type="button" class="icon-btn" id="m-next" data-i18n-aria="next">&#8594;</button>
+      <button type="button" class="icon-btn close" id="m-close" data-i18n-aria="close">&#10005;</button>
+    </div>
+    <div id="m-body"></div>
+  </div>
+</dialog>
+
+<noscript><p class="wrap note">Bu site JavaScript gerektirir. · Kailangan ng JavaScript. · This site needs JavaScript.</p></noscript>
+<script src="../app.js" defer></script>
+</body>
+</html>
