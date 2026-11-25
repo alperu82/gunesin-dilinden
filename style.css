@@ -243,6 +243,9 @@ dialog::backdrop { background: rgb(31 31 29 / 55%); }
 .ez { font-style: italic; font-size: var(--t1); line-height: 1.45; }
 .basis { font-size: var(--t-1); color: var(--ink-2); }
 .bridge { font-size: var(--t1); font-style: italic; color: var(--sun-deep); }
+.bridge-tanidik { font-style: normal; color: var(--ink-2, #5F5E5A); }
+.tag-tanidik { display: inline-block; margin-left: .4em; padding: 0 .45em; border: 1px solid currentColor; border-radius: 999px;
+  font-size: .8em; line-height: 1.5; color: var(--ink-3, #73716B); white-space: nowrap; }
 .ex p { margin: 0; }
 .ex .t { font-size: var(--t1); font-weight: 600; }
 .ex .u { color: var(--ink-2); }

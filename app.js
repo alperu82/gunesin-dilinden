@@ -19,7 +19,7 @@
       prev: "Önceki kart", next: "Sonraki kart", close: "Kapat", loading: "yükleniyor…",
       s_gdt: "GDT okuması", s_ez: "Ezber cümlesi", s_basis: "Dayanak", s_bridge: "Ses köprüsü",
       s_ex: "Örnek", s_cj: "Çekim", cj_h: ["geçmiş", "şimdiki", "gelecek"], root: "kök",
-      no_bridge: "Bu kelime için ses köprüsü yok.", fallback: "çeviri yok, özgün etiket",
+      no_bridge: "Bu kelime için ses köprüsü yok.", fallback: "çeviri yok, özgün etiket", familiar: "tanıdık kelime",
       hece_h: "Hece kartları",
       hece_lead: "34 kart, GDT okumasının sözlüğüdür: her kök ve ek hecesi için kitapta verilen anlam. Kelime kartlarındaki kutular bu etiketleri kullanır.",
       h_tr: "Türkçe", h_fil: "Filipince", h_en: "İngilizce", h_book: "Kitapta", h_ex: "Örnekler", h_rule: "Okuma kuralı", h_src: "Kaynak",
@@ -56,7 +56,7 @@
       prev: "Nakaraang kard", next: "Susunod na kard", close: "Isara", loading: "naglo-load…",
       s_gdt: "Pagbasa ng GDT", s_ez: "Pangungusap na pantanda", s_basis: "Batayan", s_bridge: "Tulay ng tunog",
       s_ex: "Halimbawa", s_cj: "Banghay", cj_h: ["nakaraan", "kasalukuyan", "hinaharap"], root: "ugat",
-      no_bridge: "Walang tulay ng tunog para sa salitang ito.", fallback: "walang salin, orihinal na etiketa",
+      no_bridge: "Walang tulay ng tunog para sa salitang ito.", fallback: "walang salin, orihinal na etiketa", familiar: "kilalang salita",
       hece_h: "Mga kard ng pantig",
       hece_lead: "34 na kard: ang talahuluganan ng pagbasa ng GDT — ang kahulugan ng bawat ugat at panlapi ayon sa aklat. Ginagamit ito ng mga kahon sa mga kard ng salita.",
       h_tr: "Turko", h_fil: "Filipino", h_en: "Ingles", h_book: "Sa aklat", h_ex: "Mga halimbawa", h_rule: "Tuntunin (Turko)", h_src: "Sanggunian",
@@ -92,7 +92,7 @@
       prev: "Previous card", next: "Next card", close: "Close", loading: "loading…",
       s_gdt: "GDT reading", s_ez: "Memory sentence", s_basis: "Basis", s_bridge: "Sound bridge",
       s_ex: "Example", s_cj: "Conjugation", cj_h: ["past", "present", "future"], root: "root",
-      no_bridge: "No sound bridge for this word.", fallback: "no translation, original label",
+      no_bridge: "No sound bridge for this word.", fallback: "no translation, original label", familiar: "familiar word",
       hece_h: "Syllable cards",
       hece_lead: "34 cards form the dictionary of the GDT reading: the meaning the book gives for each root and suffix syllable. The boxes on the word cards use these labels.",
       h_tr: "Turkish", h_fil: "Filipino", h_en: "English", h_book: "In the book", h_ex: "Examples", h_rule: "Reading rule (Turkish)", h_src: "Source",
@@ -210,8 +210,8 @@
     };
     if (ed === "tr") Object.assign(v, { mean: c.tr, meanLang: "tr", ez: c.ez, ezLang: "tr", br: c.br, ex: [c.ex[0], c.ex[1]], exL: ["tl", "tr"], cj: (c.cj || []).map((r) => [r[0], r[1]]), cjL: ["tl", "tr"] });
     if (ed === "fil") Object.assign(v, { mean: c.tl, meanLang: "tl", ez: fil.ez, ezLang: "fil", br: c.brf, ex: [c.ex[1], c.ex[0]], exL: ["tr", "tl"], cj: (c.cj || []).map((r) => [r[1], r[0]]), cjL: ["tr", "tl"] });
-    if (ed === "en_tr") Object.assign(v, { mean: en.en || "", meanLang: "en", ez: en.ezber_en_tr, ezLang: "en", br: en.ses_en_tr, ex: [c.ex[1], en.ornek_en], exL: ["tr", "en"], cj: (c.cj || []).map((r, i) => [r[1], (en.cekim_en || [])[i] || ""]), cjL: ["tr", "en"] });
-    if (ed === "en_fil") Object.assign(v, { mean: en.en || "", meanLang: "en", ez: en.ezber_en_tl, ezLang: "en", br: en.ses_en_tl, ex: [c.ex[0], en.ornek_en], exL: ["tl", "en"], cj: (c.cj || []).map((r, i) => [r[0], (en.cekim_en || [])[i] || ""]), cjL: ["tl", "en"] });
+    if (ed === "en_tr") Object.assign(v, { mean: en.en || "", meanLang: "en", ez: en.ezber_en_tr, ezLang: "en", br: en.ses_en_tr, brTan: !!en.ses_en_tr_tanidik, ex: [c.ex[1], en.ornek_en], exL: ["tr", "en"], cj: (c.cj || []).map((r, i) => [r[1], (en.cekim_en || [])[i] || ""]), cjL: ["tr", "en"] });
+    if (ed === "en_fil") Object.assign(v, { mean: en.en || "", meanLang: "en", ez: en.ezber_en_tl, ezLang: "en", br: en.ses_en_tl, brTan: !!en.ses_en_tl_tanidik, ex: [c.ex[0], en.ornek_en], exL: ["tl", "en"], cj: (c.cj || []).map((r, i) => [r[0], (en.cekim_en || [])[i] || ""]), cjL: ["tl", "en"] });
     if (enEd && v.d) {
       v.d = v.d.replace(/(^|[^\w=])s\.(?=\s?[\d≈])/g, "$1p.").replace(/168 kök/g, "168 roots").replace(/9 anlam/g, "9 meanings")
         .replace(/kök listesi/g, "root list").replace(/ikindi/g, "ikindi (afternoon)");
@@ -413,7 +413,9 @@
       (v.ez ? `<p class="ez" lang="${v.ezLang}">${esc(v.ez)}</p>` : "") + `</section>` +
       `<section class="sec"><h3>${esc(L.s_basis)}</h3><p class="basis"><b>${pips(v.s)} ${esc(sName(v.s))}</b> — ${esc(L.strength_d[v.s] || "")}${v.d ? `<br>${esc(v.d)}` : ""}</p></section>` +
       `</div><div>` +
-      `<section class="sec"><h3>${esc(L.s_bridge)}</h3>${v.br ? `<p class="bridge">${esc(v.br)}</p>` : `<p class="muted">${esc(L.no_bridge)}</p>`}</section>` +
+      `<section class="sec"><h3>${esc(L.s_bridge)}</h3>${v.br ? (v.brTan  // tanıdık kelime (tren ≈ 'train'): tanıma yardımı, ezber hilesi ya da köken ipucu değil (K13)
+        ? `<p class="bridge bridge-tanidik">${esc(v.br)} <span class="tag-tanidik">${esc(L.familiar)}</span></p>`
+        : `<p class="bridge">${esc(v.br)}</p>`) : `<p class="muted">${esc(L.no_bridge)}</p>`}</section>` +
       ex + cj + `</div></div>` +
       `<section class="sec ok-in" id="m-in" hidden aria-labelledby="m-in-h"></section>`;
     const sel = c.f;

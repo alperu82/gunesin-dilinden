@@ -448,7 +448,9 @@ def main():
         e = en.get(c["id"])
         if e:
             r["en"] = {k: e.get(k) for k in ("en", "ornek_en", "cekim_en", "ezber_en_tl", "ezber_en_tr",
-                                              "ses_en_tl", "ses_en_tr", "tr_okunus_en") if e.get(k)}
+                                              "ses_en_tl", "ses_en_tr", "tr_okunus_en",
+                                              "ses_en_tl_tanidik", "ses_en_tr_tanidik") if e.get(k)}
+            # *_tanidik: köprü İngilizce kelimenin kendisi (kitap/tanidik_en.py) -> modalda "familiar word" etiketi
         # K13: 'koken', 'tr_koken', 'kaynak' bilerek alınmaz
         cards.append(r)
 
