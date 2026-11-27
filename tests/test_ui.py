@@ -374,4 +374,4 @@ def test_uc17_ornek_kelime_kart(sayfa, site):
     # FIL baskısı: öğrenilen dil Türkçe (ornek[1])
     sayfa.goto(site + "/fil/#/k/W0026"); bekle(sayfa, 2000)
     assert sayfa.get_attribute(ex, "lang") == "tr"
-    assert sayfa.locator(f"{ex} .ex-w[data-f=W0038]").count() == 1   # sıcak -> mainit
+    assert sayfa.locator(f"{ex} .ex-w[data-f=W0394]").count() == 1   # sıcak -> mainit (W394; init artık "sıcaklık")
